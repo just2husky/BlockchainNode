@@ -38,14 +38,4 @@ public class ValidatorClient
             e.printStackTrace();
         }
     }
-    public static void main(String [] args)
-    {
-        ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
-                newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        for (int i = 0; i < 5 ; i++) {
-            es.execute(new Task(es,"task-"+i));
-        }
-
-        es.shutdown();
-    }
 }
