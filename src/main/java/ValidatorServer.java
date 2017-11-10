@@ -3,6 +3,7 @@
  */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.NetUtil;
 
 import java.net.*;
 import java.io.*;
@@ -25,7 +26,8 @@ public class ValidatorServer implements Runnable
     public void run()
     {
         try {
-            logger.info("服务器开始启动 ...");
+            logger.info("服务器 [" + NetUtil.getRealIp() + ":"
+                    + serverSocket.getLocalPort() + "] 启动");
             while(true) {
                 threadPool.execute(new Handler(serverSocket.accept()));
             }
@@ -56,7 +58,8 @@ class Handler implements Runnable {
     public void run() {
         // read and service request on socket
         try {
-            logger.info("远程主机地址：" + socket.getRemoteSocketAddress());
+            logger.info("远程主机地址：" + socket.getRemoteSocketAddress() +
+                    ", 本机地址：" + NetUtil.getRealIp() + ":" + socket.getLocalPort());
             DataInputStream in = new DataInputStream(socket.getInputStream());
             logger.info(in.readUTF());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());

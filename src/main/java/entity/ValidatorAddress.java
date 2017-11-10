@@ -5,12 +5,12 @@ package entity;
  */
 public class ValidatorAddress {
     private String ip;
-    private String port;
+    private int port;
 
     public ValidatorAddress() {
     }
 
-    public ValidatorAddress(String ip, String port) {
+    public ValidatorAddress(String ip, int port) {
         this.ip = ip;
         this.port = port;
     }
@@ -27,11 +27,11 @@ public class ValidatorAddress {
         this.ip = ip;
     }
 
-    public String getPort() {
+    public int getPort() {
         return port;
     }
 
-    public void setPort(String port) {
+    public void setPort(int port) {
         this.port = port;
     }
 

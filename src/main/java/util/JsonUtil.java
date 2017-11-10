@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static util.Const.validatorList;
+import static util.Const.ValidatorListFile;
 
 /**
  * 保存和 json 相关的操作
@@ -77,16 +77,16 @@ public class JsonUtil {
 
 
     public static void main(String[] args) {
-        String jsonFile = validatorList;
+        String jsonFile = ValidatorListFile;
 
         // 1. 从指定路径读取json文件，解析后返回json字符串
-        System.out.println(getStrByJsonFile(jsonFile));
+        logger.info(getStrByJsonFile(jsonFile));
 
         // 2.
         List<ValidatorAddress> list = getValidatorAddressList(jsonFile);
 
         for(ValidatorAddress validatorAddress : list) {
-            System.out.println(validatorAddress);
+            logger.info(validatorAddress.toString());
         }
     }
 

@@ -6,10 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.*;
 import java.io.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
-public class ValidatorClient
+public class ClientService
 {
     private final static Logger logger = LoggerFactory.getLogger(Handler.class);
 
