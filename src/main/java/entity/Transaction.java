@@ -6,7 +6,7 @@ import java.sql.Timestamp;
  * Created by chao on 2017/11/11.
  */
 public class Transaction {
-    private String id;
+    private String txId;
     private String signature;  //客户端给该交易单的签名, 为string类型
     private String tx_type; //tx_type 用以标志当前 Transaction 对象所存储的数据的类型，如 Patient、Doctor、Record等
     private String pub_key;  // 客户端该交易单签名的客户端的私钥所对应的公钥, 为string类型
@@ -16,8 +16,8 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(String id, String signature, String tx_type, String pub_key, String content, String timestamp) {
-        this.id = id;
+    public Transaction(String txId, String signature, String tx_type, String pub_key, String content, String timestamp) {
+        this.txId = txId;
         this.signature = signature;
         this.tx_type = tx_type;
         this.pub_key = pub_key;
@@ -25,12 +25,24 @@ public class Transaction {
         this.timestamp = timestamp;
     }
 
-    public String getId() {
-        return id;
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "txId='" + txId + '\'' +
+                ", signature='" + signature + '\'' +
+                ", tx_type='" + tx_type + '\'' +
+                ", pub_key='" + pub_key + '\'' +
+                ", content='" + content + '\'' +
+                ", timestamp='" + timestamp + '\'' +
+                '}';
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public String getTxId() {
+        return txId;
+    }
+
+    public void setTxId(String txId) {
+        this.txId = txId;
     }
 
     public String getSignature() {
@@ -72,16 +84,6 @@ public class Transaction {
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id='" + id + '\'' +
-                ", signature='" + signature + '\'' +
-                ", tx_type='" + tx_type + '\'' +
-                ", pub_key='" + pub_key + '\'' +
-                ", content='" + content + '\'' +
-                ", timestamp=" + timestamp +
-                '}';
-    }
 }
+
+
