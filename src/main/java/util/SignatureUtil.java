@@ -40,8 +40,6 @@ public class SignatureUtil {
         assert keyPairGenerator != null;
         keyPairGenerator.initialize(256);
         return keyPairGenerator.generateKeyPair();
-//        ECPublicKey ecPublicKey = (ECPublicKey)keyPair.getPublic();
-//        ECPrivateKey ecPrivateKey = (ECPrivateKey)keyPair.getPrivate();
     }
 
     public static void saveKey(KeyPair keyPair){
@@ -158,10 +156,77 @@ public class SignatureUtil {
         return sb.toString();
     }
 
+    /**
+     * 根据传入的 privateKey 对 content 进行数字签名，并以字符串的形式返回
+     * @param privateKey
+     * @param content
+     * @return 数字签名
+     */
+    public static String sign(PrivateKey privateKey, String content) {
+        Signature signature = null;
+        String rtn = null;
+        try {
+            signature = Signature.getInstance("SHA256withECDSA");
+            signature.initSign(privateKey);
+            signature.update(content.getBytes());
+            byte[] res = signature.sign();
+            rtn = Base64.encodeBase64String(res);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+
+        return rtn;
+    }
+
+    /**
+     * 根据 公钥 publicKey， 被签名的内容 content， 和签名 sig 来验证数字签名
+     * @param publicKey
+     * @param content
+     * @param sig
+     * @return boolean型，成功返回 true
+     */
+    public static boolean verify(PublicKey publicKey, String content, String sig) {
+        Signature signature = null;
+        boolean rtn = false;
+        try {
+            signature = Signature.getInstance("SHA256withECDSA");
+            signature.initVerify(publicKey);
+            signature.update(content.getBytes());
+            rtn = signature.verify(Base64.decodeBase64(sig));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return rtn;
+    }
+
     public static void main(String[] args) {
         KeyPair keyPair = genKeyPair("EC");
         saveKey(keyPair);
         System.out.println(loadPubKeyStr("EC"));
         System.out.println(loadPvtKeyStr("EC"));
+
+        String rtn = sign(loadPvtKey("EC"), "测试");
+        if(rtn != null) {
+            System.out.println("签名成功");
+            System.out.println("签数字签名为：" + rtn);
+        }
+        else {
+            System.out.println("rtn 值为null");
+        }
+
+        boolean verify_res = verify(loadPubKey("EC"), "测试", rtn);
+        if (verify_res) {
+            System.out.println("验证成功");
+        } else {
+            System.out.println("验证失败");
+        }
 }
 }

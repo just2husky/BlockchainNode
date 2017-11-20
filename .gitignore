@@ -2,3 +2,5 @@
 .idea
 *.iml
 target
+privateKey.txt
+publicKey.txt
