@@ -5,7 +5,7 @@ import entity.Transaction;
 
 import java.util.List;
 
-import static util.SignatureUtil.getSha256Hex;
+import static util.SignatureUtil.getSha256Base64;
 
 /**
  * Created by chao on 2017/11/17.
@@ -22,7 +22,7 @@ public class BlockService {
      */
     public Block genBlock(String preBlockId, String treeHash, String timestamp, int txCount, List<Transaction> txList) {
         String hash_content = preBlockId + treeHash + timestamp;
-        String blockId = getSha256Hex(hash_content);
+        String blockId = getSha256Base64(hash_content);
         return new Block(blockId, preBlockId, treeHash, timestamp, txCount, txList);
     }
 }

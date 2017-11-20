@@ -1,7 +1,7 @@
 package util;
 
 import org.apache.commons.codec.binary.Base64;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,8 +21,8 @@ public class SignatureUtil {
      * @param data
      * @return
      */
-    public static String getSha256Hex(String data) {
-        return org.apache.commons.codec.digest.DigestUtils.sha256Hex(data);
+    public static String getSha256Base64(String data) {
+        return Base64.encodeBase64String(DigestUtils.sha256(data));
     }
 
     /**
