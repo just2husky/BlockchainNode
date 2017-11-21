@@ -1,13 +1,14 @@
+package task;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ThreadPoolExecutor;
+import service.ClientService;
 
 /**
  * Created by chao on 2017/11/6.
  */
 public class Task implements  Runnable{
-    private final static Logger logger = LoggerFactory.getLogger(Handler.class);
+    private final static Logger logger = LoggerFactory.getLogger(Task.class);
     private  String name;
     private String serverName;
     private int port;

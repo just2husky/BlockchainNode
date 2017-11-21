@@ -1,6 +1,10 @@
+package frontend;
+
 import entity.ValidatorAddress;
+import handler.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import socket.ValidatorServer;
 
 import java.io.IOException;
 import java.util.List;

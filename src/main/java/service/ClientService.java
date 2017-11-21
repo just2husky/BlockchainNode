@@ -1,4 +1,4 @@
-/**
+package service; /**
  * Created by chao on 2017/11/6.
  */
 import org.slf4j.Logger;
@@ -9,7 +9,7 @@ import java.io.*;
 
 public class ClientService
 {
-    private final static Logger logger = LoggerFactory.getLogger(Handler.class);
+    private final static Logger logger = LoggerFactory.getLogger(ClientService.class);
 
     /**
      * 根据服务器的域名或IP地址，以及端口，访问服务器

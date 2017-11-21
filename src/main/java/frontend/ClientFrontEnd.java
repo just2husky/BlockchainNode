@@ -1,4 +1,7 @@
+package frontend;
+
 import entity.ValidatorAddress;
+import task.Task;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -12,8 +15,12 @@ import static util.JsonUtil.getValidatorAddressList;
  * Created by chao on 2017/11/9.
  */
 public class ClientFrontEnd {
-    public static void main(String [] args)
-    {
+
+    /**
+     * 根据 ValidatorListFile 连接验证器
+     */
+    public static void connValidators() {
+
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
@@ -24,5 +31,14 @@ public class ClientFrontEnd {
         }
 
         es.shutdown();
+    }
+
+    public static void connValidator(String ip, String port) {
+        Task task = new Task("启动一个client", ip, Integer.parseInt(port));
+        new Thread(task).start();
+    }
+    public static void main(String [] args) {
+        connValidator("127.0.0.1", "8000");
+//        connValidators();
     }
 }
