@@ -1,26 +1,54 @@
 package entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Created by chao on 2017/11/11.
  */
 public class Message {
-    private String msg_type;
+    private String msgId;
+    private String msgType;
     private String timestamp;
+    private String  pubKey;
+    private String signature;
 
     public Message() {
     }
 
-    public Message(String msg_type, String timestamp) {
-        this.msg_type = msg_type;
+    public Message(String msgId, String msgType, String timestamp, String pubKey, String signature) {
+        this.msgId = msgId;
+        this.msgType = msgType;
         this.timestamp = timestamp;
+        this.pubKey = pubKey;
+        this.signature = signature;
     }
 
-    public String getMsg_type() {
-        return msg_type;
+    @Override
+    public String toString() {
+        String rtn = null;
+        try {
+            rtn = (new ObjectMapper()).writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return rtn;
     }
 
-    public void setMsg_type(String msg_type) {
-        this.msg_type = msg_type;
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
+    }
+
+    public String getMsgType() {
+        return msgType;
+    }
+
+    public void setMsgType(String msgType) {
+        this.msgType = msgType;
     }
 
     public String getTimestamp() {
@@ -29,5 +57,21 @@ public class Message {
 
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getPubKey() {
+        return pubKey;
+    }
+
+    public void setPubKey(String pubKey) {
+        this.pubKey = pubKey;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 }

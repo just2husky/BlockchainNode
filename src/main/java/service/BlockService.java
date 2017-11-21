@@ -20,9 +20,10 @@ public class BlockService {
      * @param txList
      * @return
      */
-    public Block genBlock(String preBlockId, String treeHash, String timestamp, int txCount, List<Transaction> txList) {
+    public static Block genBlock(String preBlockId, String treeHash, String timestamp, int txCount, List<Transaction> txList) {
         String hash_content = preBlockId + treeHash + timestamp;
         String blockId = getSha256Base64(hash_content);
         return new Block(blockId, preBlockId, treeHash, timestamp, txCount, txList);
     }
+
 }
