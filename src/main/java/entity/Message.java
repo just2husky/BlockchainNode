@@ -10,7 +10,7 @@ public class Message {
     private String msgId;
     private String msgType;
     private String timestamp;
-    private String  pubKey;
+    private String pubKey;
     private String signature;
 
     public Message() {

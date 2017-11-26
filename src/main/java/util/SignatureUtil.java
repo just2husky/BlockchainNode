@@ -102,6 +102,20 @@ public class SignatureUtil {
         PublicKey publicKey = null;
         try {
             String pubKeyStr = readFile("publicKey.txt");
+            publicKey = strToPub(algorithm, pubKeyStr);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return publicKey;
+    }
+
+    public static PublicKey strToPub(String algorithm, String pubKeyStr) {
+        PublicKey publicKey = null;
+        try {
             KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.decodeBase64(pubKeyStr));
             publicKey = keyFactory.generatePublic(pubSpec);
@@ -184,12 +198,13 @@ public class SignatureUtil {
 
     /**
      * 根据 公钥 publicKey， 被签名的内容 content， 和签名 sig 来验证数字签名
-     * @param publicKey
+     * @param publicKeyStr
      * @param content
      * @param sig
      * @return boolean型，成功返回 true
      */
-    public static boolean verify(PublicKey publicKey, String content, String sig) {
+    public static boolean verify(String publicKeyStr, String content, String sig) {
+        PublicKey publicKey = strToPub("EC", publicKeyStr);
         Signature signature = null;
         boolean rtn = false;
         try {
@@ -222,7 +237,7 @@ public class SignatureUtil {
             System.out.println("rtn 值为null");
         }
 
-        boolean verify_res = verify(loadPubKey("EC"), "测试", rtn);
+        boolean verify_res = verify(loadPubKeyStr("EC"), "测试", rtn);
         if (verify_res) {
             System.out.println("验证成功");
         } else {

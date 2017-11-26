@@ -1,6 +1,6 @@
 package service;
 
-import entity.Message;
+import entity.PrePrepareMessage;
 import entity.Transaction;
 import entity.TransactionMessage;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ public class MessageService {
      * @param transaction
      * @return
      */
-    public static Message genMsg(String msgType, Transaction transaction) {
+    public static TransactionMessage genTxMsg(String msgType, Transaction transaction) {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
@@ -36,9 +36,37 @@ public class MessageService {
         return new TransactionMessage(msgId, msgType, timestamp, pubKey, signature, transaction);
     }
 
+    public static PrePrepareMessage genPrePrepareMsg(String msgType, String txId) {
+        String timestamp = TimeUtil.getNowTimeStamp();
+        PrivateKey privateKey = loadPvtKey("EC");
+        String pubKey = loadPubKeyStr("EC");
+        String signature = SignatureUtil.sign(privateKey, txId);
+        String msgId = getSha256Base64(signature);
+        String txIdHash  = getSha256Base64(txId);
+        return new PrePrepareMessage(msgId, msgType, timestamp, pubKey, signature, "1", "1", txId, txIdHash);
+    }
+
+    /**
+     * 检验 PrePrepareMessage的正确性
+     * @param ppm
+     * @return
+     */
+    public static String verifyPrePrepareMsg(PrePrepareMessage ppm) {
+        if (!ppm.getTxIdHash().equals(getSha256Base64(ppm.getTxId()))) {
+            return "txIdHashError";
+        } else if (!SignatureUtil.verify(ppm.getPubKey(), ppm.getTxId(), ppm.getSignature())) {
+            return "sigError";
+        }
+        return "true";
+    }
+
     public static void main(String[] args) {
         try {
-            logger.info(genMsg("测试msgType", genTx("string", "测试")).toString());
+            TransactionMessage txMsg = genTxMsg("cliMsg", genTx("string", "测试"));
+            logger.info(txMsg.toString());
+            PrePrepareMessage ppm = genPrePrepareMsg("PrePrepare", txMsg.getTransaction().getTxId());
+            logger.info(ppm.toString());
+            logger.info(verifyPrePrepareMsg(ppm));
         } catch (Exception e) {
             e.printStackTrace();
         }
