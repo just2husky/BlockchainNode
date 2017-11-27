@@ -6,28 +6,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Created by chao on 2017/11/24.
  */
-public class PrePrepareMessage extends Message{
+public class PrepareMessage extends Message {
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
-    private String txId;  // 预准备消息所要发送的消息内容，为当前所要提交的 Transaction 的内容
-    private String txIdHash;  // 预准备消息所要发送的消息内容的摘要，即哈希值
+    private String ip;  //发送PrepareMessage的ip
+    private int port;  // 发送PrepareMessage的端口
 
-    public PrePrepareMessage() {
+    public PrepareMessage() {
     }
 
-    public PrePrepareMessage(String viewId, String seqNum, String txId, String txIdHash) {
+    public PrepareMessage(Message message, String viewId, String seqNum, String ip, int port) {
+        super(message.getMsgId(), message.getMsgType(), message.getTimestamp(), message.getPubKey(),
+                message.getSignature());
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.txId = txId;
-        this.txIdHash = txIdHash;
+        this.ip = ip;
+        this.port = port;
     }
 
-    public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, String viewId, String seqNum, String txId, String txIdHash) {
+    public PrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature,
+                          String viewId, String seqNum, String ip, int port) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.txId = txId;
-        this.txIdHash = txIdHash;
+        this.ip = ip;
+        this.port = port;
     }
 
     @Override
@@ -57,19 +60,19 @@ public class PrePrepareMessage extends Message{
         this.seqNum = seqNum;
     }
 
-    public String getTxId() {
-        return txId;
+    public String getIp() {
+        return ip;
     }
 
-    public void setTxId(String txId) {
-        this.txId = txId;
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
-    public String getTxIdHash() {
-        return txIdHash;
+    public int getPort() {
+        return port;
     }
 
-    public void setTxIdHash(String txIdHash) {
-        this.txIdHash = txIdHash;
+    public void setPort(int port) {
+        this.port = port;
     }
 }

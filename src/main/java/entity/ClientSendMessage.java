@@ -7,13 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Created by chao on 2017/11/11.
  * client 向 Validator 发送的消息
  */
-public class TransactionMessage extends Message {
+public class ClientSendMessage extends Message {
     private Transaction transaction;
 
-    public TransactionMessage() {
+    public ClientSendMessage() {
     }
 
-    public TransactionMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, Transaction transaction) {
+    public ClientSendMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, Transaction transaction) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.transaction = transaction;
     }

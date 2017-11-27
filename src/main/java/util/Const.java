@@ -5,5 +5,6 @@ package util;
  */
 public class Const {
     public final static String ValidatorListFile =
-            "C:\\Users\\chao\\workspace\\IdeaProjects\\BlockchainNode\\src\\main\\resources\\validator-list.json";
+            "src/main/resources/validator-list.json";
+    public final static String PM = "prepareMsg";
 }
