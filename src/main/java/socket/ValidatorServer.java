@@ -13,6 +13,7 @@ import handler.Handler;
 /**
  * Created by chao on 2017/11/21.
  */
+@SuppressWarnings("InfiniteLoopStatement")
 public class ValidatorServer implements Runnable
 {
     private final static Logger logger = LoggerFactory.getLogger(Handler.class);
@@ -31,10 +32,11 @@ public class ValidatorServer implements Runnable
         try {
             logger.info("服务器 [" + NetUtil.getRealIp() + ":"
                     + serverSocket.getLocalPort() + "] 启动");
-//            while(true) {
-//                threadPool.execute(new Handler(serverSocket.accept()));
-//            }
-            threadPool.execute(new Handler(serverSocket.accept()));
+
+            while(true) {
+                threadPool.execute(new Handler(serverSocket.accept()));
+            }
+//            threadPool.execute(new Handler(serverSocket.accept()));
         } catch (IOException ex) {
             threadPool.shutdown();
         }

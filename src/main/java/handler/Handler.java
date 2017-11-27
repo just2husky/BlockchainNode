@@ -44,29 +44,43 @@ public class Handler implements Runnable {
             String msgType = (String) objectMapper.readValue(rcvMsg, Map.class).get("msgType");
             logger.info("接收到的 Msg 类型为： " + msgType);
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+//            out.writeUTF("接收到你发来的消息");
+//            out.flush();
+//            socket.close();
 
             // 1. 如果socket中接受到的消息为 cliMsg 类型
             if (msgType.equals("cliMsg")) {
+                out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
+                out.flush();
+                socket.close();
                 procCliMsg(rcvMsg, localPort);
             }
 
             // 2. 如果socket中接受到的消息为 PrePrepare 类型
             else if (msgType.equals("PrePrepare")) {
-                out.writeUTF(procPPMsg(rcvMsg, localPort));
+                out.writeUTF("接收到你发来的预准备消息，准备校验后广播准备消息");
+                out.flush();
+                socket.close();
+                procPPMsg(rcvMsg, localPort);
             }
 
             else if (msgType.equals(Const.PM)) {
+                out.writeUTF("接收到你发来的准备消息");
+                out.flush();
+                socket.close();
                 logger.info("接收到准备消息");
-                out.writeUTF("接收到准备消息");
             }
 
             else {
+                out.writeUTF("未知的 msgType 类型");
+                out.flush();
+                socket.close();
                 logger.error("未知的 msgType 类型");
             }
 
-            out.writeUTF("\n连接结束");
-            out.flush();
-            socket.close();
+//            out.writeUTF("\n连接结束");
+//            out.flush();
+//            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,25 +97,26 @@ public class Handler implements Runnable {
         logger.info("本机地址为：" + realIp + ":" + localPort);
         ClientSendMessage txMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
         PrePrepareMessage ppm = MessageService.genPrePrepareMsg("PrePrepare", txMsg.getTransaction().getTxId());
-        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
-        for (ValidatorAddress va : list) {
-            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
-            if (!((va.getIp().equals(realIp) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
-                Socket sendPrePreSocket = new Socket(va.getIp(), va.getPort());
-                String ppmStr = objectMapper.writeValueAsString(ppm);
-                OutputStream outToServer = sendPrePreSocket.getOutputStream();
-                DataOutputStream outputStream = new DataOutputStream(outToServer);
-                logger.info("开始向 " + va.getIp() + ":" + va.getPort() + " 发送 PrePrepareMessage: " + ppmStr);
-                outputStream.writeUTF(ppmStr);
-
-                InputStream inFromServer = sendPrePreSocket.getInputStream();
-                DataInputStream inputStream = new DataInputStream(inFromServer);
-                String ppRcvMsg = inputStream.readUTF();
-                logger.info("服务器响应 PrePrepareMessage 的结果为： " + ppRcvMsg);
-
-                sendPrePreSocket.close();
-            }
-        }
+        broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
+//        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
+//        for (ValidatorAddress va : list) {
+//            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
+//            if (!((va.getIp().equals(realIp) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
+//                Socket sendPrePreSocket = new Socket(va.getIp(), va.getPort());
+//                String ppmStr = objectMapper.writeValueAsString(ppm);
+//                OutputStream outToServer = sendPrePreSocket.getOutputStream();
+//                DataOutputStream outputStream = new DataOutputStream(outToServer);
+//                logger.info("开始向 " + va.getIp() + ":" + va.getPort() + " 发送 PrePrepareMessage: " + ppmStr);
+//                outputStream.writeUTF(ppmStr);
+//
+//                InputStream inFromServer = sendPrePreSocket.getInputStream();
+//                DataInputStream inputStream = new DataInputStream(inFromServer);
+//                String ppRcvMsg = inputStream.readUTF();
+//                logger.info("服务器响应 PrePrepareMessage 的结果为： " + ppRcvMsg);
+//
+//                sendPrePreSocket.close();
+//            }
+//        }
     }
 
     private String procPPMsg(String rcvMsg, int localPort) throws IOException {
@@ -127,24 +142,23 @@ public class Handler implements Runnable {
      * @throws IOException
      */
     private static void broadcastMsg(String ip, int localPort, String msg) throws IOException {
-//        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
-//        for (ValidatorAddress va : list) {
-//            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
-//            if (!((va.getIp().equals(ip) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
-                ValidatorAddress va = new ValidatorAddress("127.0.0.1", 8002);
-                Socket sendPrePreSocket = new Socket(va.getIp(), va.getPort());
-                OutputStream outToServer = sendPrePreSocket.getOutputStream();
+        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
+        for (ValidatorAddress va : list) {
+            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
+            if (!((va.getIp().equals(ip) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
+                Socket broadcastSocket = new Socket(va.getIp(), va.getPort());
+                OutputStream outToServer = broadcastSocket.getOutputStream();
                 DataOutputStream outputStream = new DataOutputStream(outToServer);
                 logger.info("开始向 " + va.getIp() + ":" + va.getPort() + " 发送消息: " + msg);
                 outputStream.writeUTF(msg);
 
-                InputStream inFromServer = sendPrePreSocket.getInputStream();
+                InputStream inFromServer = broadcastSocket.getInputStream();
                 DataInputStream inputStream = new DataInputStream(inFromServer);
                 String rcvMsg = inputStream.readUTF();
                 logger.info("服务器响应消息的结果为： " + rcvMsg);
 
-                sendPrePreSocket.close();
-//            }
-//        }
+                broadcastSocket.close();
+            }
+        }
     }
 }

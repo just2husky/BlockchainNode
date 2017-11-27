@@ -39,6 +39,8 @@ public class ServerFrontEnd {
                 e.printStackTrace();
             }
         }
+
+        logger.info("验证节点终止运行");
     }
 
     public static void main(String[] args) {
