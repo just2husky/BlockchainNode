@@ -10,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.MessageService;
 import util.Const;
+import util.MongoUtil;
 import util.NetUtil;
 
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static util.Const.ValidatorListFile;
 import static util.JsonUtil.getValidatorAddressList;
@@ -86,6 +88,35 @@ public class Handler implements Runnable {
         }
     }
 
+
+    public static long getSeqNum(String collectionName) throws Exception {
+        if(!MongoUtil.collectionExists(collectionName)) {
+            logger.info("集合" + collectionName + "不存在，开始创建");
+            MongoUtil.insertKV("seqNum", "0", collectionName);
+            return 0;
+        } else {
+            String record = MongoUtil.findFirstDoc(collectionName);
+            if(record != null && !record.equals("")) {
+                long seqNum = -1;
+                try {
+                    seqNum = Long.parseLong((String) objectMapper.readValue(record, Map.class).get("seqNum"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return seqNum;
+
+            }
+            else {
+                throw new Exception("获取 seqNum 失败！");
+            }
+        }
+    }
+
+    public static void updateSeqNum(String collectionName) throws Exception {
+
+        long oldSeqNum = getSeqNum(collectionName);
+        MongoUtil.updateKV("seqNum", Long.toString(oldSeqNum), Long.toString(oldSeqNum+1), collectionName);
+    }
     /**
      * 处理客户端发送的消息
      * @param rcvMsg 接收到的消息
@@ -94,8 +125,12 @@ public class Handler implements Runnable {
      */
     private void procCliMsg(String rcvMsg, int localPort) throws IOException {
         String realIp = NetUtil.getRealIp();
-        logger.info("本机地址为：" + realIp + ":" + localPort);
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+        // 将接收到的客户端的消息存在名字为 url 的 collection 中
+        MongoUtil.insertJson(rcvMsg, url);
         ClientSendMessage txMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
+//        String seqNum =
         PrePrepareMessage ppm = MessageService.genPrePrepareMsg("PrePrepare", txMsg.getTransaction().getTxId());
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
 //        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
@@ -159,6 +194,16 @@ public class Handler implements Runnable {
 
                 broadcastSocket.close();
             }
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            System.out.println(getSeqNum("seq"));
+            updateSeqNum("seq");
+            System.out.println(getSeqNum("seq"));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

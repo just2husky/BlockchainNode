@@ -40,7 +40,7 @@ public class ServerFrontEnd {
             }
         }
 
-        logger.info("验证节点终止运行");
+//        logger.info("验证节点终止运行");
     }
 
     public static void main(String[] args) {
