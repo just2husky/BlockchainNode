@@ -191,6 +191,39 @@ public class MessageService {
         return true;
     }
 
+    public static PreparedMessage genPreparedMsg(String cliMsgId, String viewId, String seqNum, String ip, int port) {
+        String timestamp = TimeUtil.getNowTimeStamp();
+        PrivateKey privateKey = loadPvtKey("EC");
+        String pubKey = loadPubKeyStr("EC");
+        String signature = SignatureUtil.sign(privateKey, getPDMSignContent(cliMsgId, viewId, seqNum, timestamp, ip, port));
+        String msgId = getSha256Base64(signature);
+        return new PreparedMessage(msgId, timestamp, pubKey, signature, cliMsgId, viewId, seqNum, ip, port);
+    }
+
+    public static boolean verifyPreparedMsg(PreparedMessage pdm) {
+        if (!SignatureUtil.verify(pdm.getPubKey(), getPMSignContent(pdm.getCliMsgId(), pdm.getViewId(),
+                pdm.getSeqNum(), pdm.getTimestamp(), pdm.getIp(), pdm.getPort()), pdm.getSignature())) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean savePDMsg(PreparedMessage pdm, String collectionName){
+        if(MongoUtil.findByKV("msgId", pdm.getMsgId(), collectionName)) {
+            logger.info("pdm 消息 [" + pdm.getMsgId() + "] 已存在");
+            return false;
+        } else {
+            MongoUtil.insertJson(pdm.toString(), collectionName);
+        }
+        return false;
+    }
+
+    public static String getPDMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp, String ip, int port) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp).append(ip).append(port);
+        return sb.toString();
+    }
+
     /**
      * 生成 Message 类的对象
      * @param msgType

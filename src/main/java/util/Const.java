@@ -9,4 +9,5 @@ public class Const {
     public final static String CM = "ClientMsg";
     public final static String PPM = "PrePrepareMsg";
     public final static String PM = "PrepareMsg";
+    public final static String PDM = "PreparedMsg";
 }
