@@ -1,5 +1,6 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Created by chao on 2017/11/11.
  * client 向 Validator 发送的消息
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ClientMessage extends Message {
     private Transaction transaction;
 

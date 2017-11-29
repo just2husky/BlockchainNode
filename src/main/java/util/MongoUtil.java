@@ -7,13 +7,13 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import entity.PrePrepareMessage;
 import entity.PrepareMessage;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.TransactionService;
 
-import javax.swing.text.html.HTMLDocument;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -192,6 +192,18 @@ public class MongoUtil {
             }
         }
         return count;
+    }
+
+    /**
+     * 根据 ppm 的id查找 ppm
+     * @param ppmId
+     * @param collectionName
+     * @return
+     */
+    public static PrePrepareMessage findPPMById(String ppmId, String collectionName) throws IOException {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        String ppmStr = collection.find(eq("msgId", ppmId)).first().toJson();
+        return objectMapper.readValue(ppmStr, PrePrepareMessage.class);
     }
 
 

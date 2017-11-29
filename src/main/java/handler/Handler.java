@@ -9,9 +9,7 @@ import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.MessageService;
-import util.Const;
-import util.MongoUtil;
-import util.NetUtil;
+import util.*;
 
 import java.io.*;
 import java.net.Socket;
@@ -76,6 +74,7 @@ public class Handler implements Runnable {
                 out.flush();
                 socket.close();
                 logger.info("接收到准备消息");
+                procPMsg(rcvMsg, localPort);
             }
 
             else {
@@ -186,15 +185,22 @@ public class Handler implements Runnable {
 
         if(verifyRes) {
             String pmCollection = url + "." + Const.PM;
+            String ppmCollection = url + "." + Const.PPM;
             // 2.  PrepareMessage 存入前检验
-            // (1) 统计 ppmSign 出现的次数
-            int count = MongoUtil.countByKV("ppmSign", pm.getPpmSign(), pmCollection);
+            //  统计 ppmSign 出现的次数
+            PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(pm.getPpmSign()), ppmCollection);
+            int count = MongoUtil.countPPMSign(pm.getPpmSign(), ppm.getViewId(), ppm.getSeqNum(), pmCollection);
+
             // 3. 将 PrePrepareMessage 存入到集合中
 
             if(MessageService.savePMsg(pm, pmCollection)) {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
             } else {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");
+            }
+
+            if (2 * PeerUtil.getFaultCount() == count) {
+                logger.info("开始生成 PreparedMessage 并存入数据库");
             }
         }
 
