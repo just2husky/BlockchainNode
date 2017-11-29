@@ -39,14 +39,29 @@ public class MessageService {
         return new ClientSendMessage(msgId, msgType, timestamp, pubKey, signature, transaction);
     }
 
-    public static PrePrepareMessage genPrePrepareMsg(String msgType, String seqNum, String txId) {
+    public static PrePrepareMessage genPrePrepareMsg(String seqNum, String cliMsgId) {
         String timestamp = TimeUtil.getNowTimeStamp();
+        String viewId = "1";
+
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, txId);
+        String signature = SignatureUtil.sign(privateKey, getPPMSignContent(cliMsgId, viewId, seqNum, timestamp));
         String msgId = getSha256Base64(signature);
-        String txIdHash = getSha256Base64(txId);
-        return new PrePrepareMessage(msgId, msgType, timestamp, pubKey, signature, "1", seqNum, txId, txIdHash);
+        return new PrePrepareMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, cliMsgId);
+    }
+
+    /**
+     * 根据传入的内容生成 ppm 要签名的字符串
+     * @param cliMsgId
+     * @param viewId
+     * @param seqNum
+     * @param timestamp
+     * @return
+     */
+    public static String getPPMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp);
+        return sb.toString();
     }
 
     /**
@@ -55,18 +70,19 @@ public class MessageService {
      * @param ppm
      * @return
      */
-    public static String verifyPrePrepareMsg(PrePrepareMessage ppm) {
-        if (!ppm.getTxIdHash().equals(getSha256Base64(ppm.getTxId()))) {
-            return "txIdHashError";
-        } else if (!SignatureUtil.verify(ppm.getPubKey(), ppm.getTxId(), ppm.getSignature())) {
-            return "sigError";
+    public static boolean verifyPrePrepareMsg(PrePrepareMessage ppm) {
+        if (!SignatureUtil.verify(ppm.getPubKey(), getPPMSignContent(ppm.getCliMsgId(), ppm.getViewId(),
+                ppm.getSeqNum(), ppm.getTimestamp()), ppm.getSignature())) {
+            return false;
         }
-        return "true";
+        return true;
     }
 
     public static PrepareMessage genPrepareMsg(String msgType, String ip, int port) {
         String url = ip + ":" + port;
-        return new PrepareMessage(genMessage(msgType, url), "1", "1", ip, port);
+//        return new PrepareMessage(genMessage(msgType, url), "1", "1", ip, port);
+        // TODO
+        return null;
     }
 
     /**
@@ -130,9 +146,9 @@ public class MessageService {
         try {
             ClientSendMessage txMsg = genTxMsg("cliMsg", genTx("string", "测试"));
             logger.info(txMsg.toString());
-            PrePrepareMessage ppm = genPrePrepareMsg("PrePrepare", "1", txMsg.getTransaction().getTxId());
+            PrePrepareMessage ppm = genPrePrepareMsg("1", txMsg.getTransaction().getTxId());
             logger.info(ppm.toString());
-            logger.info(verifyPrePrepareMsg(ppm));
+            logger.info(verifyPrePrepareMsg(ppm) + "");
         } catch (Exception e) {
             e.printStackTrace();
         }

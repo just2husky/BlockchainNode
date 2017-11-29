@@ -2,6 +2,7 @@ package entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import util.Const;
 
 /**
  * Created by chao on 2017/11/24.
@@ -9,25 +10,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class PrePrepareMessage extends Message{
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
-    private String txId;  // 预准备消息所要发送的消息内容，为当前所要提交的 Transaction 的内容
-    private String txIdHash;  // 预准备消息所要发送的消息内容的摘要，即哈希值
+    private String cliMsgId;  // ClientSendMessage 的 id
 
     public PrePrepareMessage() {
     }
 
-    public PrePrepareMessage(String viewId, String seqNum, String txId, String txIdHash) {
+    public PrePrepareMessage(String viewId, String seqNum, String cliMsgId) {
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.txId = txId;
-        this.txIdHash = txIdHash;
+        this.cliMsgId = cliMsgId;
     }
 
-    public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, String viewId, String seqNum, String txId, String txIdHash) {
+    public PrePrepareMessage(String msgId, String timestamp, String pubKey, String signature, String viewId, String seqNum, String cliMsgId) {
+        super(msgId, Const.PPM, timestamp, pubKey, signature);
+        this.viewId = viewId;
+        this.seqNum = seqNum;
+        this.cliMsgId = cliMsgId;
+    }
+
+    public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, String viewId, String seqNum, String cliMsgId) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.txId = txId;
-        this.txIdHash = txIdHash;
+        this.cliMsgId = cliMsgId;
     }
 
     @Override
@@ -57,19 +62,11 @@ public class PrePrepareMessage extends Message{
         this.seqNum = seqNum;
     }
 
-    public String getTxId() {
-        return txId;
+    public String getCliMsgId() {
+        return cliMsgId;
     }
 
-    public void setTxId(String txId) {
-        this.txId = txId;
-    }
-
-    public String getTxIdHash() {
-        return txIdHash;
-    }
-
-    public void setTxIdHash(String txIdHash) {
-        this.txIdHash = txIdHash;
+    public void setCliMsgId(String cliMsgId) {
+        this.cliMsgId = cliMsgId;
     }
 }

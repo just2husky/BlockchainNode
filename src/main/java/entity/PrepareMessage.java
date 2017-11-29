@@ -2,6 +2,7 @@ package entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import util.Const;
 
 /**
  * Created by chao on 2017/11/24.
@@ -15,9 +16,9 @@ public class PrepareMessage extends Message {
     public PrepareMessage() {
     }
 
-    public PrepareMessage(Message message, String viewId, String seqNum, String ip, int port) {
-        super(message.getMsgId(), message.getMsgType(), message.getTimestamp(), message.getPubKey(),
-                message.getSignature());
+    public PrepareMessage(String msgId, String timestamp, String pubKey, String signature,
+                          String viewId, String seqNum, String ip, int port) {
+        super(msgId, Const.PM, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
         this.ip = ip;

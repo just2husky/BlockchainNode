@@ -46,7 +46,7 @@ public class Handler implements Runnable {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             String rcvMsg = in.readUTF();
             String msgType = (String) objectMapper.readValue(rcvMsg, Map.class).get("msgType");
-            logger.info("接收到的 Msg 类型为： " + msgType);
+            logger.info("接收到的 Msg 类型为： [" + msgType + "] -< 内容为：" + rcvMsg);
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 //            out.writeUTF("接收到你发来的消息");
 //            out.flush();
@@ -104,11 +104,13 @@ public class Handler implements Runnable {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
-        // 将接收到的客户端的消息存在名字为 url 的 collection 中
-        MongoUtil.insertJson(rcvMsg, url);
-        ClientSendMessage txMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
+
+        // 将接收到的客户端的消息存在名字为 url.ClientSendMessage 的 collection 中
+        MongoUtil.insertJson(rcvMsg, url + "." + Const.CM);
+        ClientSendMessage cliMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
+
         long seqNum = updateSeqNum(url + ".seqNum");
-        PrePrepareMessage ppm = MessageService.genPrePrepareMsg("PrePrepare", Long.toString(seqNum), txMsg.getTransaction().getTxId());
+        PrePrepareMessage ppm = MessageService.genPrePrepareMsg(Long.toString(seqNum), cliMsg.getMsgId());
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
 //        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
 //        for (ValidatorAddress va : list) {
@@ -131,15 +133,15 @@ public class Handler implements Runnable {
 //        }
     }
 
-    private String procPPMsg(String rcvMsg, int localPort) throws IOException {
+    private boolean procPPMsg(String rcvMsg, int localPort) throws IOException {
         PrePrepareMessage msg = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
         logger.info("接收到 PrePrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrePrepareMsg ...");
-        String verifyRes = MessageService.verifyPrePrepareMsg(msg);
+        boolean verifyRes = MessageService.verifyPrePrepareMsg(msg);
         logger.info("校验结束，结果为：" + verifyRes);
 
         // 若 PrePrepareMessage 验证结果为 true， 则向其余节点发送 PrepareMessage。
-        if(verifyRes.equals("true")) {
+        if(verifyRes) {
             PrepareMessage pm = MessageService.genPrepareMsg(Const.PM, NetUtil.getRealIp(), localPort);
             broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
         }
