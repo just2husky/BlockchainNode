@@ -1,14 +1,22 @@
 package util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import entity.PrepareMessage;
 import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import service.TransactionService;
 
+import javax.swing.text.html.HTMLDocument;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -17,6 +25,8 @@ import static com.mongodb.client.model.Filters.eq;
  * Created by chao on 2017/11/27.
  */
 public class MongoUtil {
+    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static ObjectMapper objectMapper = new ObjectMapper();
     private static MongoClient mongoClient;
     private static MongoDatabase mongoDatabase;
     static {
@@ -136,6 +146,53 @@ public class MongoUtil {
         return collection.find(eq(key, value)).iterator().hasNext();
     }
 
+    /**
+     * 统计 key, value 出现的次数
+     * @param key
+     * @param value
+     * @param collectionName
+     * @return
+     */
+    public static int countByKV(String key, String value, String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        Iterator it = collection.find(eq(key, value)).iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            count++;
+            it.next();
+        }
+        return count;
+    }
+
+    /**
+     * 副本节点通过检查它们是否具有相同的视图，序列号和摘要来验证准备消息是否与预准备消息相匹配。
+     * @param ppmSign
+     * @param viewId
+     * @param seqNum
+     * @param pmCollection
+     * @return
+     */
+    public static int countPPMSign(String ppmSign, String viewId, String seqNum, String pmCollection) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(pmCollection);
+        Iterator it = collection.find(eq("ppmSign", ppmSign)).iterator();
+        int count = 0;
+        while (it.hasNext()) {
+
+            Document document = (Document) it.next();
+            String pmStr = document.toJson();
+            logger.info("pmStr: " + pmStr);
+            PrepareMessage pm = null;
+            try {
+                pm = objectMapper.readValue(pmStr, PrepareMessage.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if(pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
+                count++;
+            }
+        }
+        return count;
+    }
 
 
     public static void main( String args[] ){

@@ -1,5 +1,6 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import util.Const;
@@ -7,6 +8,7 @@ import util.Const;
 /**
  * Created by chao on 2017/11/24.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PrepareMessage extends Message {
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n

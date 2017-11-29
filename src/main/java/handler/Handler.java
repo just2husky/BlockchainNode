@@ -124,6 +124,13 @@ public class Handler implements Runnable {
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
     }
 
+    /**
+     * 处理接收到的预准备消息
+     * @param rcvMsg
+     * @param localPort
+     * @return
+     * @throws IOException
+     */
     private boolean procPPMsg(String rcvMsg, int localPort) throws IOException {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
@@ -139,10 +146,13 @@ public class Handler implements Runnable {
         if(verifyRes) {
             // 2. 校验结果为 true ，将 PrePrepareMessage 存入到集合中
             String ppmCollection = url + "." + Const.PPM;
-            MessageService.savePPMsg(ppm, ppmCollection);
-            logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存入数据库");
+            if(MessageService.savePPMsg(ppm, ppmCollection)) {
+                logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存入数据库");
+            } else {
+                logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存在");
+            }
 
-//            // 3. 生成 PrepareMessage，存入集合，并向其他节点进行广播
+            // 3. 生成 PrepareMessage，存入集合，并向其他节点进行广播
             PrepareMessage pm = MessageService.genPrepareMsg(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(),
                     NetUtil.getRealIp(), localPort);
             String pmCollection = url + "." + Const.PM;
@@ -152,6 +162,44 @@ public class Handler implements Runnable {
         }
 
         return verifyRes;
+    }
+
+    /**
+     * 处理准备消息
+     * 只要准备消息的签名是正确的，它们的视图编号等于副本的当前视图，并且它们的序列号介于 h 和 H，
+     * 副本节点（包括主节点）便接受准备消息，并将它们添加到日志中。
+     * @param rcvMsg
+     * @param localPort
+     * @return
+     */
+    private boolean procPMsg(String rcvMsg, int localPort) throws IOException {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+
+        // 1. 校验接收到的 PrepareMessage
+        PrepareMessage pm = objectMapper.readValue(rcvMsg, PrepareMessage.class);
+        logger.info("接收到 PrepareMsg：" + rcvMsg);
+        logger.info("开始校验 PrepareMsg ...");
+        boolean verifyRes = MessageService.verifyPrepareMsg(pm);
+        logger.info("校验结束，结果为：" + verifyRes);
+
+        if(verifyRes) {
+            String pmCollection = url + "." + Const.PM;
+            // 2.  PrepareMessage 存入前检验
+            // (1) 统计 ppmSign 出现的次数
+            int count = MongoUtil.countByKV("ppmSign", pm.getPpmSign(), pmCollection);
+            // 3. 将 PrePrepareMessage 存入到集合中
+
+            if(MessageService.savePMsg(pm, pmCollection)) {
+                logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
+            } else {
+                logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");
+            }
+        }
+
+
+        return true;
     }
 
     /**
@@ -181,6 +229,7 @@ public class Handler implements Runnable {
             }
         }
     }
+
 
     public static void main(String[] args) {
         try {
