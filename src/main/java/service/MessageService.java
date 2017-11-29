@@ -91,6 +91,26 @@ public class MessageService {
         return saveCliMsg(cliMsg, collectionName);
     }
 
+    public static boolean savePMsg(PrepareMessage pMsg, String collectionName){
+        if(MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
+            logger.info("pMsg 消息 [" + pMsg.getMsgId() + "] 已存在");
+            return false;
+        } else {
+            MongoUtil.insertJson(pMsg.toString(), collectionName);
+        }
+        return false;
+    }
+
+    public static boolean savePMsg(String pMsgStr, String collectionName){
+        ClientMessage cliMsg = null;
+        try {
+            cliMsg = objectMapper.readValue(pMsgStr, ClientMessage.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return saveCliMsg(cliMsg, collectionName);
+    }
+
     public static PrePrepareMessage genPrePrepareMsg(String seqNum, String cliMsgId) {
         String timestamp = TimeUtil.getNowTimeStamp();
         String viewId = "1";

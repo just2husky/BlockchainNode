@@ -129,7 +129,7 @@ public class Handler implements Runnable {
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
 
-        // 1. 校验接收到的 PrePrepareMessage，存入到集合中
+        // 1. 校验接收到的 PrePrepareMessage
         PrePrepareMessage ppm = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
         logger.info("接收到 PrePrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrePrepareMsg ...");
@@ -140,10 +140,15 @@ public class Handler implements Runnable {
             // 2. 校验结果为 true ，将 PrePrepareMessage 存入到集合中
             String ppmCollection = url + "." + Const.PPM;
             MessageService.savePPMsg(ppm, ppmCollection);
+            logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存入数据库");
 
-//            // 3. 生成 PrepareMessage，并向其他节点进行广播
-//            PrepareMessage pm = MessageService.genPrepareMsg(Const.PM, NetUtil.getRealIp(), localPort);
-//            broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
+//            // 3. 生成 PrepareMessage，存入集合，并向其他节点进行广播
+            PrepareMessage pm = MessageService.genPrepareMsg(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(),
+                    NetUtil.getRealIp(), localPort);
+            String pmCollection = url + "." + Const.PM;
+            MessageService.savePMsg(pm, pmCollection);
+            logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
+            broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
         }
 
         return verifyRes;
