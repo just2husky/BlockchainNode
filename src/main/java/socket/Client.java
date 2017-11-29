@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 
 import service.MessageService;
 import service.TransactionService;
+import util.Const;
 
 /**
  * Created by chao on 2017/11/25.
@@ -23,7 +24,7 @@ public class Client {
 
             OutputStream outToServer = client.getOutputStream();
             DataOutputStream out = new DataOutputStream(outToServer);
-            String txMsg = MessageService.genTxMsg("cliMsg", TransactionService.genTx("string", "测试")).toString();
+            String txMsg = MessageService.genTxMsg(Const.CM, TransactionService.genTx("string", "测试")).toString();
             out.writeUTF(txMsg);
 
             InputStream inFromServer = client.getInputStream();

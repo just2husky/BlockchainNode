@@ -24,7 +24,7 @@ public class ValidatorServer implements Runnable
     {
         serverSocket = new ServerSocket(port);
         threadPool = Executors.newFixedThreadPool(poolSize);
-        serverSocket.setSoTimeout(100000);
+//        serverSocket.setSoTimeout(100000);
     }
 
     public void run()
@@ -36,7 +36,6 @@ public class ValidatorServer implements Runnable
             while(true) {
                 threadPool.execute(new Handler(serverSocket.accept()));
             }
-//            threadPool.execute(new Handler(serverSocket.accept()));
         } catch (IOException ex) {
             threadPool.shutdown();
         }
@@ -48,7 +47,7 @@ public class ValidatorServer implements Runnable
         int port = 8000;
         try
         {
-            Thread t = new Thread(new ValidatorServer(port, 4));
+            Thread t = new Thread(new ValidatorServer(port, Runtime.getRuntime().availableProcessors()));
             t.start();
         }catch(IOException e)
         {

@@ -1,18 +1,17 @@
 package util;
 
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import com.mongodb.util.JSON;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * Created by chao on 2017/11/27.
@@ -58,7 +57,7 @@ public class MongoUtil {
     public static void updateKV(String key, String oldValue, String newValue, String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         //更新文档   将文档中likes=100的文档修改为likes=200
-        collection.updateMany(Filters.eq(key, oldValue), new Document("$set",new Document(key, newValue)));
+        collection.updateMany(eq(key, oldValue), new Document("$set",new Document(key, newValue)));
     }
 
     /**
@@ -119,6 +118,24 @@ public class MongoUtil {
         collection.insertMany(documents);
         System.out.println("文档插入成功");
     }
+
+    /**
+     * 在名字为 collectionName 的集合里查找同时匹配k,v的值，若查找到则返回 True
+     * @param key
+     * @param value
+     * @param collectionName
+     */
+    public static boolean findByKV(String key, String value, String collectionName) {
+        Block<Document> printBlock = new Block<Document>() {
+            public void apply(final Document document) {
+                System.out.println(document.toJson());
+            }
+        };
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+//        collection.find(eq(key, value)).forEach(printBlock);
+        return collection.find(eq(key, value)).iterator().hasNext();
+    }
+
 
 
     public static void main( String args[] ){

@@ -17,7 +17,6 @@ import java.io.*;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static service.MessageService.getSeqNum;
 import static service.MessageService.updateSeqNum;
@@ -53,7 +52,7 @@ public class Handler implements Runnable {
 //            socket.close();
 
             // 1. 如果socket中接受到的消息为 cliMsg 类型
-            if (msgType.equals("cliMsg")) {
+            if (msgType.equals(Const.CM)) {
                 out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
                 out.flush();
                 socket.close();
@@ -65,7 +64,7 @@ public class Handler implements Runnable {
             }
 
             // 2. 如果socket中接受到的消息为 PrePrepare 类型
-            else if (msgType.equals("PrePrepare")) {
+            else if (msgType.equals(Const.PPM)) {
                 out.writeUTF("接收到你发来的预准备消息，准备校验后广播准备消息");
                 out.flush();
                 socket.close();
@@ -104,33 +103,25 @@ public class Handler implements Runnable {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
+        // 1. 将从客户端收到的 Client Message 存入到集合中
+        String cmCollection = url + "." + Const.CM;
+        if(MessageService.saveCliMsg(rcvMsg, cmCollection)) {
+            logger.info("Client Message 存入成功");
+        } else {
+            logger.info("Client Message 已存在");
+        }
 
-        // 将接收到的客户端的消息存在名字为 url.ClientSendMessage 的 collection 中
-        MongoUtil.insertJson(rcvMsg, url + "." + Const.CM);
-        ClientSendMessage cliMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
-
+        // 2. 从集合中取出给当前 PrePrepareMessage 分配的序列号
         long seqNum = updateSeqNum(url + ".seqNum");
+
+        // 3. 根据 Client Messag 生成 PrePrepareMessage，存入到集合中
+        String ppmCollection = url + "." + Const.PPM;
+        ClientMessage cliMsg = objectMapper.readValue(rcvMsg, ClientMessage.class);
         PrePrepareMessage ppm = MessageService.genPrePrepareMsg(Long.toString(seqNum), cliMsg.getMsgId());
+        MessageService.savePPMsg(ppm, ppmCollection);
+
+        // 4. 主节点向其他备份节点广播 PrePrepareMessage
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
-//        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
-//        for (ValidatorAddress va : list) {
-//            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
-//            if (!((va.getIp().equals(realIp) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
-//                Socket sendPrePreSocket = new Socket(va.getIp(), va.getPort());
-//                String ppmStr = objectMapper.writeValueAsString(ppm);
-//                OutputStream outToServer = sendPrePreSocket.getOutputStream();
-//                DataOutputStream outputStream = new DataOutputStream(outToServer);
-//                logger.info("开始向 " + va.getIp() + ":" + va.getPort() + " 发送 PrePrepareMessage: " + ppmStr);
-//                outputStream.writeUTF(ppmStr);
-//
-//                InputStream inFromServer = sendPrePreSocket.getInputStream();
-//                DataInputStream inputStream = new DataInputStream(inFromServer);
-//                String ppRcvMsg = inputStream.readUTF();
-//                logger.info("服务器响应 PrePrepareMessage 的结果为： " + ppRcvMsg);
-//
-//                sendPrePreSocket.close();
-//            }
-//        }
     }
 
     private boolean procPPMsg(String rcvMsg, int localPort) throws IOException {
@@ -141,10 +132,10 @@ public class Handler implements Runnable {
         logger.info("校验结束，结果为：" + verifyRes);
 
         // 若 PrePrepareMessage 验证结果为 true， 则向其余节点发送 PrepareMessage。
-        if(verifyRes) {
-            PrepareMessage pm = MessageService.genPrepareMsg(Const.PM, NetUtil.getRealIp(), localPort);
-            broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
-        }
+//        if(verifyRes) {
+//            PrepareMessage pm = MessageService.genPrepareMsg(Const.PM, NetUtil.getRealIp(), localPort);
+//            broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
+//        }
         return verifyRes;
     }
 

@@ -30,13 +30,65 @@ public class MessageService {
      * @param transaction
      * @return
      */
-    public static ClientSendMessage genTxMsg(String msgType, Transaction transaction) {
+    public static ClientMessage genTxMsg(String msgType, Transaction transaction) {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
         String signature = SignatureUtil.sign(privateKey, transaction.toString());
         String msgId = getSha256Base64(signature);
-        return new ClientSendMessage(msgId, msgType, timestamp, pubKey, signature, transaction);
+        return new ClientMessage(msgId, msgType, timestamp, pubKey, signature, transaction);
+    }
+
+    /**
+     * 将 ClientMessage 对象存入集合 collectionName 中。
+     * @param cliMsg
+     * @param collectionName
+     * @return
+     */
+    public static boolean saveCliMsg(ClientMessage cliMsg, String collectionName){
+        if(MongoUtil.findByKV("msgId", cliMsg.getMsgId(), collectionName)) {
+            logger.info("cliMsg 消息 [" + cliMsg.getMsgId() + "] 已存在");
+            return false;
+        } else {
+            MongoUtil.insertJson(cliMsg.toString(), collectionName);
+        }
+        return false;
+    }
+
+    /**
+     * 将 ClientMessage json 字符串存入集合 collectionName 中。
+     * @param cliMsgStr
+     * @param collectionName
+     * @return
+     */
+    public static boolean saveCliMsg(String cliMsgStr, String collectionName){
+        ClientMessage cliMsg = null;
+        try {
+            cliMsg = objectMapper.readValue(cliMsgStr, ClientMessage.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return saveCliMsg(cliMsg, collectionName);
+    }
+
+    public static boolean savePPMsg(PrePrepareMessage ppMsg, String collectionName){
+        if(MongoUtil.findByKV("msgId", ppMsg.getMsgId(), collectionName)) {
+            logger.info("ppMsg 消息 [" + ppMsg.getMsgId() + "] 已存在");
+            return false;
+        } else {
+            MongoUtil.insertJson(ppMsg.toString(), collectionName);
+        }
+        return false;
+    }
+
+    public static boolean savePPMsg(String ppMsgStr, String collectionName){
+        ClientMessage cliMsg = null;
+        try {
+            cliMsg = objectMapper.readValue(ppMsgStr, ClientMessage.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return saveCliMsg(cliMsg, collectionName);
     }
 
     public static PrePrepareMessage genPrePrepareMsg(String seqNum, String cliMsgId) {
@@ -51,20 +103,6 @@ public class MessageService {
     }
 
     /**
-     * 根据传入的内容生成 ppm 要签名的字符串
-     * @param cliMsgId
-     * @param viewId
-     * @param seqNum
-     * @param timestamp
-     * @return
-     */
-    public static String getPPMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp);
-        return sb.toString();
-    }
-
-    /**
      * 检验 PrePrepareMessage的正确性
      *
      * @param ppm
@@ -76,6 +114,20 @@ public class MessageService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 根据传入的内容生成 ppm 要签名的字符串
+     * @param cliMsgId
+     * @param viewId
+     * @param seqNum
+     * @param timestamp
+     * @return
+     */
+    public static String getPPMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp);
+        return sb.toString();
     }
 
     public static PrepareMessage genPrepareMsg(String msgType, String ip, int port) {
@@ -144,7 +196,7 @@ public class MessageService {
 
     public static void main(String[] args) {
         try {
-            ClientSendMessage txMsg = genTxMsg("cliMsg", genTx("string", "测试"));
+            ClientMessage txMsg = genTxMsg("cliMsg", genTx("string", "测试"));
             logger.info(txMsg.toString());
             PrePrepareMessage ppm = genPrePrepareMsg("1", txMsg.getTransaction().getTxId());
             logger.info(ppm.toString());

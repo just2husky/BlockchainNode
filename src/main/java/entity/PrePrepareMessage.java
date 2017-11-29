@@ -10,7 +10,7 @@ import util.Const;
 public class PrePrepareMessage extends Message{
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
-    private String cliMsgId;  // ClientSendMessage 的 id
+    private String cliMsgId;  // ClientMessage 的 id
 
     public PrePrepareMessage() {
     }
