@@ -16,6 +16,19 @@ import static org.junit.Assert.*;
 public class MessageServiceTest {
     private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    @Test
+    public void genPrepareMsg() throws Exception {
+        PrePrepareMessage ppm = MessageService.genPrePrepareMsg("1","1");
+        System.out.println(ppm.toString());
+        PrepareMessage pm = MessageService.genPrepareMsg(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(),
+                "127.0.0.1", 9999);
+        System.out.println(pm.toString());
+        boolean rlt = MessageService.verifyPrepareMsg(pm);
+        System.out.println("验证结果为：" + rlt);
+
+    }
+
+
 
     @Test
     public void genPrePrepareMsg() throws Exception {

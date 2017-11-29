@@ -10,6 +10,7 @@ import util.Const;
 public class PrepareMessage extends Message {
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
+    private String ppmSign; //ppm消息中的数字签名，相当于消息 m 的 digest d.
     private String ip;  //发送PrepareMessage的ip
     private int port;  // 发送PrepareMessage的端口
 
@@ -17,16 +18,17 @@ public class PrepareMessage extends Message {
     }
 
     public PrepareMessage(String msgId, String timestamp, String pubKey, String signature,
-                          String viewId, String seqNum, String ip, int port) {
+                          String viewId, String seqNum, String ppmSign, String ip, int port) {
         super(msgId, Const.PM, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
+        this.ppmSign = ppmSign;
         this.ip = ip;
         this.port = port;
     }
 
     public PrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature,
-                          String viewId, String seqNum, String ip, int port) {
+                          String viewId, String seqNum, String ppmSign, String ip, int port) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
@@ -59,6 +61,14 @@ public class PrepareMessage extends Message {
 
     public void setSeqNum(String seqNum) {
         this.seqNum = seqNum;
+    }
+
+    public String getPpmSign() {
+        return ppmSign;
+    }
+
+    public void setPpmSign(String ppmSign) {
+        this.ppmSign = ppmSign;
     }
 
     public String getIp() {

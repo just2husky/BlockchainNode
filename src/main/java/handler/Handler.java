@@ -125,17 +125,27 @@ public class Handler implements Runnable {
     }
 
     private boolean procPPMsg(String rcvMsg, int localPort) throws IOException {
-        PrePrepareMessage msg = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+
+        // 1. 校验接收到的 PrePrepareMessage，存入到集合中
+        PrePrepareMessage ppm = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
         logger.info("接收到 PrePrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrePrepareMsg ...");
-        boolean verifyRes = MessageService.verifyPrePrepareMsg(msg);
+        boolean verifyRes = MessageService.verifyPrePrepareMsg(ppm);
         logger.info("校验结束，结果为：" + verifyRes);
 
-        // 若 PrePrepareMessage 验证结果为 true， 则向其余节点发送 PrepareMessage。
-//        if(verifyRes) {
+        if(verifyRes) {
+            // 2. 校验结果为 true ，将 PrePrepareMessage 存入到集合中
+            String ppmCollection = url + "." + Const.PPM;
+            MessageService.savePPMsg(ppm, ppmCollection);
+
+//            // 3. 生成 PrepareMessage，并向其他节点进行广播
 //            PrepareMessage pm = MessageService.genPrepareMsg(Const.PM, NetUtil.getRealIp(), localPort);
 //            broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(pm));
-//        }
+        }
+
         return verifyRes;
     }
 
