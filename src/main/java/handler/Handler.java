@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static service.MessageService.getSeqNum;
+import static service.MessageService.updateSeqNum;
 import static util.Const.ValidatorListFile;
 import static util.JsonUtil.getValidatorAddressList;
 
@@ -55,7 +57,11 @@ public class Handler implements Runnable {
                 out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
                 out.flush();
                 socket.close();
-                procCliMsg(rcvMsg, localPort);
+                try {
+                    procCliMsg(rcvMsg, localPort);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             // 2. 如果socket中接受到的消息为 PrePrepare 类型
@@ -88,50 +94,21 @@ public class Handler implements Runnable {
         }
     }
 
-
-    public static long getSeqNum(String collectionName) throws Exception {
-        if(!MongoUtil.collectionExists(collectionName)) {
-            logger.info("集合" + collectionName + "不存在，开始创建");
-            MongoUtil.insertKV("seqNum", "0", collectionName);
-            return 0;
-        } else {
-            String record = MongoUtil.findFirstDoc(collectionName);
-            if(record != null && !record.equals("")) {
-                long seqNum = -1;
-                try {
-                    seqNum = Long.parseLong((String) objectMapper.readValue(record, Map.class).get("seqNum"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return seqNum;
-
-            }
-            else {
-                throw new Exception("获取 seqNum 失败！");
-            }
-        }
-    }
-
-    public static void updateSeqNum(String collectionName) throws Exception {
-
-        long oldSeqNum = getSeqNum(collectionName);
-        MongoUtil.updateKV("seqNum", Long.toString(oldSeqNum), Long.toString(oldSeqNum+1), collectionName);
-    }
     /**
      * 处理客户端发送的消息
      * @param rcvMsg 接收到的消息
      * @param localPort 本机的端口
      * @throws IOException
      */
-    private void procCliMsg(String rcvMsg, int localPort) throws IOException {
+    private void procCliMsg(String rcvMsg, int localPort) throws Exception {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
         // 将接收到的客户端的消息存在名字为 url 的 collection 中
         MongoUtil.insertJson(rcvMsg, url);
         ClientSendMessage txMsg = objectMapper.readValue(rcvMsg, ClientSendMessage.class);
-//        String seqNum =
-        PrePrepareMessage ppm = MessageService.genPrePrepareMsg("PrePrepare", txMsg.getTransaction().getTxId());
+        long seqNum = updateSeqNum(url + ".seqNum");
+        PrePrepareMessage ppm = MessageService.genPrePrepareMsg("PrePrepare", Long.toString(seqNum), txMsg.getTransaction().getTxId());
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
 //        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
 //        for (ValidatorAddress va : list) {
