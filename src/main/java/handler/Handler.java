@@ -189,7 +189,10 @@ public class Handler implements Runnable {
             // 2.  PrepareMessage 存入前检验
             //  统计 ppmSign 出现的次数
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(pm.getPpmSign()), ppmCollection);
-            int count = MongoUtil.countPPMSign(pm.getPpmSign(), ppm.getViewId(), ppm.getSeqNum(), pmCollection);
+            int count = 0;
+            if (ppm != null) {
+                count = MongoUtil.countPPMSign(pm.getPpmSign(), ppm.getViewId(), ppm.getSeqNum(), pmCollection);
+            }
 
             // 3. 将 PrePrepareMessage 存入到集合中
 
@@ -199,7 +202,8 @@ public class Handler implements Runnable {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");
             }
 
-            if (2 * PeerUtil.getFaultCount() == count) {
+            logger.info("count = " + count);
+            if (2 * PeerUtil.getFaultCount() <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
                 PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getCliMsgId(), ppm.getViewId(),
@@ -209,6 +213,8 @@ public class Handler implements Runnable {
                 } else {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存在");
                 }
+            } else {
+                logger.info("url 为" + url + "关于 viewId=" + ppm.getViewId() + ", seqNum="  + ppm.getSeqNum() + " 的Prepare Message 数量不够");
             }
         }
 

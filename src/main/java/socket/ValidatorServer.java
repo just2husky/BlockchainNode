@@ -1,5 +1,6 @@
 package socket;
 
+import handler.PreparedMsgHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.NetUtil;
@@ -19,11 +20,13 @@ public class ValidatorServer implements Runnable
     private final static Logger logger = LoggerFactory.getLogger(Handler.class);
     private final ServerSocket serverSocket;
     private final ExecutorService threadPool;
+    private final ExecutorService pdmhPool;
 
     public ValidatorServer(int port, int poolSize) throws IOException
     {
         serverSocket = new ServerSocket(port);
         threadPool = Executors.newFixedThreadPool(poolSize);
+        pdmhPool = Executors.newFixedThreadPool(poolSize);
 //        serverSocket.setSoTimeout(100000);
     }
 
@@ -32,7 +35,8 @@ public class ValidatorServer implements Runnable
         try {
             logger.info("服务器 [" + NetUtil.getRealIp() + ":"
                     + serverSocket.getLocalPort() + "] 启动");
-
+            logger.info("启动检测生成 PreparedMessage 的服务器");
+            new Thread(new PreparedMsgHandler(NetUtil.getRealIp(), serverSocket.getLocalPort())).start();
             while(true) {
                 threadPool.execute(new Handler(serverSocket.accept()));
             }

@@ -51,8 +51,8 @@ public class MessageService {
             return false;
         } else {
             MongoUtil.insertJson(cliMsg.toString(), collectionName);
+            return true;
         }
-        return false;
     }
 
     /**
@@ -77,8 +77,8 @@ public class MessageService {
             return false;
         } else {
             MongoUtil.insertJson(ppMsg.toString(), collectionName);
+            return true;
         }
-        return false;
     }
 
     public static boolean savePPMsg(String ppMsgStr, String collectionName){
@@ -97,8 +97,9 @@ public class MessageService {
             return false;
         } else {
             MongoUtil.insertJson(pMsg.toString(), collectionName);
+            return true;
         }
-        return false;
+//        return false;
     }
 
     public static boolean savePMsg(String pMsgStr, String collectionName){

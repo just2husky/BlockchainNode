@@ -12,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import service.TransactionService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -93,7 +90,7 @@ public class MongoUtil {
      * 根据 collectionName 遍历 collection
      * @param collectionName
      */
-    public static void traverse(String collectionName) {
+    public static Set<String> traverse(String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         //检索所有文档
         /**
@@ -103,9 +100,14 @@ public class MongoUtil {
          * */
         FindIterable<Document> findIterable = collection.find();
         MongoCursor<Document> mongoCursor = findIterable.iterator();
+        Set<String> set = new HashSet<String>();
+        String record;
         while(mongoCursor.hasNext()){
-            System.out.println(mongoCursor.next());
+            record = mongoCursor.next().toJson();
+            set.add(record);
+            logger.info("record: " + record);
         }
+        return set;
     }
 
     private static void insertTest(MongoDatabase mongoDatabase) {
@@ -193,15 +195,22 @@ public class MongoUtil {
     }
 
     /**
-     * 根据 ppm 的id查找 ppm
+     * 根据 ppm 的id查找 ppm，若存在则返回 PrePrepareMessage，否则就返回null
      * @param ppmId
      * @param collectionName
      * @return
      */
     public static PrePrepareMessage findPPMById(String ppmId, String collectionName) throws IOException {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
-        String ppmStr = collection.find(eq("msgId", ppmId)).first().toJson();
-        return objectMapper.readValue(ppmStr, PrePrepareMessage.class);
+        FindIterable<Document> findIterable = collection.find(eq("msgId", ppmId));
+        String ppmStr = null;
+        if (findIterable.iterator().hasNext()) {
+            logger.info("msgId 存在于集合：" + collectionName);
+            ppmStr =findIterable.first().toJson();
+            return objectMapper.readValue(ppmStr, PrePrepareMessage.class);
+        } else {
+            return null;
+        }
     }
 
     public static void dropAllCollections() {
