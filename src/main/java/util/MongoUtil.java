@@ -3,10 +3,7 @@ package util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 import entity.PrePrepareMessage;
 import entity.PrepareMessage;
 import org.bson.Document;
@@ -18,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -206,6 +204,16 @@ public class MongoUtil {
         return objectMapper.readValue(ppmStr, PrePrepareMessage.class);
     }
 
+    public static void dropAllCollections() {
+        MongoIterable<String> colls = mongoDatabase.listCollectionNames();
+        for (String s : colls) {
+            System.out.println(s);
+            // 先删除所有Collection(类似于关系数据库中的"表")
+            if (!s.equals("system.indexes")) {
+                mongoDatabase.getCollection(s).drop();
+            }
+        }
+    }
 
     public static void main( String args[] ){
         try{

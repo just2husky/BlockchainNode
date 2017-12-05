@@ -9,6 +9,11 @@ import service.TransactionService;
  */
 public class MongoUtilTest {
     @Test
+    public void dropAllCollections() throws Exception {
+        MongoUtil.dropAllCollections();
+    }
+
+    @Test
     public void countPPMSign() throws Exception {
         String url = "192.168.43.153:8001";
         String pmCollection = url + "." + Const.PM;
