@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.CommitMessageService;
 import service.MessageService;
 import util.*;
 
@@ -186,6 +187,7 @@ public class Handler implements Runnable {
         if(verifyRes) {
             String pmCollection = url + "." + Const.PM;
             String ppmCollection = url + "." + Const.PPM;
+            String cmtmCollection = url + "." + Const.CMTM;
             // 2.  PrepareMessage 存入前检验
             //  统计 ppmSign 出现的次数
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(pm.getPpmSign()), ppmCollection);
@@ -203,6 +205,7 @@ public class Handler implements Runnable {
             }
 
             logger.info("count = " + count);
+            // 4. 达成 count >= 2 * f 后存入到集合中
             if (2 * PeerUtil.getFaultCount() <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
@@ -210,12 +213,24 @@ public class Handler implements Runnable {
                         ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                 if(MessageService.savePDMsg(pdm, pdmCollection)) {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
+                    CommitMessage cmtm = CommitMessageService.genCommitMsg(ppm.getSignature(), ppm.getViewId(),
+                            ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
+                    logger.info("commit message: " + cmtm.toString());
+                    if(CommitMessageService.save(cmtm, cmtmCollection)) {
+                        logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存入数据库");
+                        broadcastMsg(NetUtil.getRealIp(), localPort, cmtm.toString());
+                    } else {
+                        logger.info("CommitMessage [" + pdm.getMsgId() + "] 已存在");
+                    }
                 } else {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存在");
                 }
             } else {
-                logger.info("url 为" + url + "关于 viewId=" + ppm.getViewId() + ", seqNum="  + ppm.getSeqNum() + " 的Prepare Message 数量不够");
+                logger.info("Prepare Message 数量不够");
             }
+
+            // 5. 生成 commit message 存入集合中，并广播给其他节点
+
         }
 
 

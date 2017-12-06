@@ -215,8 +215,8 @@ public class MessageService {
             return false;
         } else {
             MongoUtil.insertJson(pdm.toString(), collectionName);
+            return true;
         }
-        return false;
     }
 
     public static String getPDMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp, String ip, int port) {
