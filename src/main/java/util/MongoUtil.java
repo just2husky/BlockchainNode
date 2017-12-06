@@ -180,7 +180,7 @@ public class MongoUtil {
 
             Document document = (Document) it.next();
             String pmStr = document.toJson();
-            logger.info("pmStr: " + pmStr);
+            logger.debug("pmStr: " + pmStr);
             PrepareMessage pm = null;
             try {
                 pm = objectMapper.readValue(pmStr, PrepareMessage.class);
@@ -206,7 +206,7 @@ public class MongoUtil {
         String ppmStr = null;
         if (findIterable.iterator().hasNext()) {
             logger.info("msgId 存在于集合：" + collectionName);
-            ppmStr =findIterable.first().toJson();
+            ppmStr = findIterable.first().toJson();
             return objectMapper.readValue(ppmStr, PrePrepareMessage.class);
         } else {
             return null;

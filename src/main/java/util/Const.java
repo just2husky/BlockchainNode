@@ -11,4 +11,5 @@ public class Const {
     public final static String PM = "PrepareMsg";
     public final static String PDM = "PreparedMsg";
     public final static String CMTM = "CommitMsg";
+    public final static String CMTDM = "CommittedMsg";
 }
