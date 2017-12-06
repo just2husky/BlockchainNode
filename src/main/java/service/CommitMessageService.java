@@ -44,4 +44,9 @@ public class CommitMessageService {
             return true;
         }
     }
+
+    public static boolean verify(CommitMessage cmtm) {
+        return SignatureUtil.verify(cmtm.getPubKey(), getCMTMSignContent(cmtm.getPpmSign(), cmtm.getViewId(),
+                cmtm.getSeqNum(), cmtm.getTimestamp(), cmtm.getIp(), cmtm.getPort()), cmtm.getSignature());
+    }
 }

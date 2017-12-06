@@ -78,6 +78,14 @@ public class Handler implements Runnable {
                 procPMsg(rcvMsg, localPort);
             }
 
+            else if (msgType.equals(Const.CMTM)) {
+                out.writeUTF("接收到你发来的commit消息");
+                out.flush();
+                socket.close();
+                logger.info("接收到commit消息");
+                procCMTM(rcvMsg, localPort);
+            }
+
             else {
                 out.writeUTF("未知的 msgType 类型");
                 out.flush();
@@ -235,6 +243,19 @@ public class Handler implements Runnable {
 
 
         return true;
+    }
+
+    public static void procCMTM(String rcvMsg, int localPort) throws IOException {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+
+        // 1. 校验接收到的 CommitMessage
+        CommitMessage cmtm = objectMapper.readValue(rcvMsg, CommitMessage.class);
+        logger.info("接收到 CommitMsg：" + rcvMsg);
+        logger.info("开始校验 CommitMsg ...");
+        boolean verifyRes = CommitMessageService.verify(cmtm);
+        logger.info("校验结束，结果为：" + verifyRes);
     }
 
     /**
