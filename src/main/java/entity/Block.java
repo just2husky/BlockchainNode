@@ -1,5 +1,8 @@
 package entity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 
 /**
@@ -27,14 +30,13 @@ public class Block {
 
     @Override
     public String toString() {
-        return "Block{" +
-                "blockId='" + blockId + '\'' +
-                ", preBlockId='" + preBlockId + '\'' +
-                ", treeHash='" + treeHash + '\'' +
-                ", timestamp='" + timestamp + '\'' +
-                ", txCount=" + txCount +
-                ", txList=" + txList +
-                '}';
+        String rtn = null;
+        try {
+            rtn = (new ObjectMapper()).writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return rtn;
     }
 
     public String getBlockId() {
