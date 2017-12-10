@@ -15,6 +15,8 @@ public class Block {
     private String timestamp;
     private int txCount;
     private List<Transaction> txList;
+    private String pubKey;
+    private String signature;
 
     public Block() {
     }
@@ -26,6 +28,17 @@ public class Block {
         this.timestamp = timestamp;
         this.txCount = txCount;
         this.txList = txList;
+    }
+
+    public Block(String blockId, String preBlockId, String treeHash, String timestamp, int txCount, List<Transaction> txList, String pubKey, String signature) {
+        this.blockId = blockId;
+        this.preBlockId = preBlockId;
+        this.treeHash = treeHash;
+        this.timestamp = timestamp;
+        this.txCount = txCount;
+        this.txList = txList;
+        this.pubKey = pubKey;
+        this.signature = signature;
     }
 
     @Override

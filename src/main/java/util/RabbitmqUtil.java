@@ -20,7 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 public class RabbitmqUtil {
     private final static Logger logger = LoggerFactory.getLogger(RabbitmqUtil.class);
-    private final static String QUEUE_NAME = Const.QUEUE_NAME;
+    private String queueName;
     private static ConnectionFactory factory = new ConnectionFactory();
 
     static {
@@ -36,17 +36,24 @@ public class RabbitmqUtil {
         factory.setPort(portNumber);
     }
 
+    public RabbitmqUtil(String queueName) {
+        this.queueName = queueName;
+    }
+
+    public String getQueueName() {
+        return this.queueName;
+    }
     /**
      * 将 String push 到队列中
      *
      * @param message
      */
-    public static void push(String message) {
+    public void push(String message) {
         try {
             Connection conn = factory.newConnection();
             Channel channel = conn.createChannel();
-            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+            channel.queueDeclare(this.queueName, false, false, false, null);
+            channel.basicPublish("", this.queueName, null, message.getBytes());
             logger.debug(" [x] Sent '" + message + "'");
             channel.close();
             conn.close();
@@ -62,13 +69,13 @@ public class RabbitmqUtil {
      *
      * @param messages
      */
-    public static void push(List<String> messages) {
+    public void push(List<String> messages) {
         try {
             Connection conn = factory.newConnection();
             Channel channel = conn.createChannel();
             for (String message : messages) {
-                channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-                channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+                channel.queueDeclare(this.queueName, false, false, false, null);
+                channel.basicPublish("", this.queueName, null, message.getBytes());
                 logger.debug(" [x] Sent '" + message + "'");
             }
             channel.close();
@@ -83,13 +90,13 @@ public class RabbitmqUtil {
     /**
      * 从队列中获取一条消息
      */
-    public static void pull() {
+    public void pull() {
         try {
             Connection conn = factory.newConnection();
             Channel channel = conn.createChannel();
-            GetResponse response = channel.basicGet(QUEUE_NAME, false);
+            GetResponse response = channel.basicGet(this.queueName, false);
             logger.info(new String(response.getBody()));
-//            long queueLen = channel.messageCount(QUEUE_NAME);
+//            long queueLen = channel.messageCount(this.queueName);
 //            logger.info("队列长度： " + queueLen);
             channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
             channel.close();
@@ -108,7 +115,7 @@ public class RabbitmqUtil {
      * @param limitSize 单位: MB
      * @return 接收到的消息 list
      */
-    public static List<String> pull(double limitTime, double limitSize) {
+    public List<String> pull(double limitTime, double limitSize) {
         List<String> msgList = new ArrayList<String>();
         try {
             Connection conn = factory.newConnection();
@@ -117,8 +124,8 @@ public class RabbitmqUtil {
             long beginTime = System.nanoTime();
             //  1. 接收队列中消息的时间是否已超时
             while ((double) (System.nanoTime() - beginTime) / 1000000 < limitTime) {
-                if(channel.messageCount(QUEUE_NAME) > 0) {
-                    GetResponse response = channel.basicGet(QUEUE_NAME, false);
+                if(channel.messageCount(this.queueName) > 0) {
+                    GetResponse response = channel.basicGet(this.queueName, false);
                     String msg = new String(response.getBody());
                     // 2. 接收队列中消息的大小是否超过限制
                     totalLen += msg.getBytes(Const.CHAR_SET).length;
@@ -152,15 +159,16 @@ public class RabbitmqUtil {
     }
 
     public static void main(String[] args) throws IOException, TimeoutException {
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
         try {
             for (int i = 0; i < 200; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
-                push(tx.toString());
+                rmq.push(tx.toString());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<String> msgList = pull(100000, 2.0/1024.0);
+        List<String> msgList = rmq.pull(100000, 2.0/1024.0);
         for(String msg : msgList) {
             System.out.println(msg);
         }
