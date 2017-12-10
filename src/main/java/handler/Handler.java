@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.BlockMessageService;
 import service.CommitMessageService;
 import service.CommittedMessageService;
 import service.MessageService;
@@ -51,13 +52,13 @@ public class Handler implements Runnable {
 //            out.flush();
 //            socket.close();
 
-            // 1. 如果socket中接受到的消息为 cliMsg 类型
-            if (msgType.equals(Const.CM)) {
+            // 1. 如果socket中接受到的消息为 blockMsg 类型
+            if (msgType.equals(Const.BM)) {
                 out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
                 out.flush();
                 socket.close();
                 try {
-                    procCliMsg(rcvMsg, localPort);
+                    procBlockMsg(rcvMsg, localPort);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -108,25 +109,25 @@ public class Handler implements Runnable {
      * @param localPort 本机的端口
      * @throws IOException
      */
-    private void procCliMsg(String rcvMsg, int localPort) throws Exception {
+    private void procBlockMsg(String rcvMsg, int localPort) throws Exception {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
-        // 1. 将从客户端收到的 Client Message 存入到集合中
-        String cmCollection = url + "." + Const.CM;
-        if(MessageService.saveCliMsg(rcvMsg, cmCollection)) {
-            logger.info("Client Message 存入成功");
+        // 1. 将从客户端收到的 Block Message 存入到集合中
+        String cmCollection = url + "." + Const.BM;
+        if(BlockMessageService.save(rcvMsg, cmCollection)) {
+            logger.info("Block Message 存入成功");
         } else {
-            logger.info("Client Message 已存在");
+            logger.info("Block Message 已存在");
         }
 
         // 2. 从集合中取出给当前 PrePrepareMessage 分配的序列号
         long seqNum = updateSeqNum(url + ".seqNum");
 
-        // 3. 根据 Client Messag 生成 PrePrepareMessage，存入到集合中
+        // 3. 根据 Block Message 生成 PrePrepareMessage，存入到集合中
         String ppmCollection = url + "." + Const.PPM;
-        ClientMessage cliMsg = objectMapper.readValue(rcvMsg, ClientMessage.class);
-        PrePrepareMessage ppm = MessageService.genPrePrepareMsg(Long.toString(seqNum), cliMsg.getMsgId());
+        BlockMessage blockMsg = objectMapper.readValue(rcvMsg, BlockMessage.class);
+        PrePrepareMessage ppm = MessageService.genPrePrepareMsg(Long.toString(seqNum), blockMsg.getMsgId());
         MessageService.savePPMsg(ppm, ppmCollection);
 
         // 4. 主节点向其他备份节点广播 PrePrepareMessage

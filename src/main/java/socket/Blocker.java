@@ -28,7 +28,7 @@ public class Blocker implements Runnable{
         while (true) {
             block = BlockService.genBlock(preBlockId, queueName, limitTime, limitSize);
             if (block != null) {
-                logger.info("生成 block：" + block.toString());
+                logger.info("生成 block：" + block.getBlockId());
                 preBlockId = block.getBlockId();
                 logger.info("开始发送 block：");
                 sendBlock(block);
