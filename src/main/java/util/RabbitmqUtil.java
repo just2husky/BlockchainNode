@@ -164,14 +164,14 @@ public class RabbitmqUtil {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 2; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
-                if(i<4) {
-                    txList.add(tx);
-                }
+//                if(i<4) {
+//                    txList.add(tx);
+//                }
                 rmq.push(tx.toString());
             }
-            rmq.push(objectMapper.writeValueAsString(txList));
+//            rmq.push(objectMapper.writeValueAsString(txList));
 //            logger.info(objectMapper.writeValueAsString(txList).substring(0,1));
         } catch (Exception e) {
             e.printStackTrace();

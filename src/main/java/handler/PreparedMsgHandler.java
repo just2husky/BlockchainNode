@@ -12,7 +12,6 @@ import util.NetUtil;
 import util.PeerUtil;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,10 +50,10 @@ public class PreparedMsgHandler implements Runnable{
                 logger.info("开始统计 " + ppm.getSignature() + "在 " + pmCollection + " 出现的次数");
                 int count = MongoUtil.countPPMSign(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(), pmCollection);
                 logger.info(ppm.getSignature() + "在 " + pmCollection + " 出现的次数为： " + count);
-                if(!MongoUtil.findByKV("cliMsgId", ppm.getCliMsgId(), pdmCollection)) {
+                if(!MongoUtil.findByKV("cliMsgId", ppm.getBlockMsg().getMsgId(), pdmCollection)) {
                     if (2 * PeerUtil.getFaultCount() <= count) {
                         logger.info("开始生成 PreparedMessage 并存入数据库");
-                        PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getCliMsgId(), ppm.getViewId(),
+                        PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                                 ppm.getSeqNum(), NetUtil.getRealIp(), port);
                         if (MessageService.savePDMsg(pdm, pdmCollection)) {
                             logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");

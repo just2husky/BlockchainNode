@@ -12,29 +12,31 @@ import util.Const;
 public class PrePrepareMessage extends Message{
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
-    private String cliMsgId;  // ClientMessage 的 id
+    private BlockMessage blockMsg;
 
     public PrePrepareMessage() {
     }
 
-    public PrePrepareMessage(String viewId, String seqNum, String cliMsgId) {
+    public PrePrepareMessage(String viewId, String seqNum, BlockMessage blockMsg) {
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.cliMsgId = cliMsgId;
+        this.blockMsg = blockMsg;
     }
 
-    public PrePrepareMessage(String msgId, String timestamp, String pubKey, String signature, String viewId, String seqNum, String cliMsgId) {
+    public PrePrepareMessage(String msgId, String timestamp, String pubKey, String signature, String viewId,
+                             String seqNum, BlockMessage blockMsg) {
         super(msgId, Const.PPM, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.cliMsgId = cliMsgId;
+        this.blockMsg = blockMsg;
     }
 
-    public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, String viewId, String seqNum, String cliMsgId) {
+    public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature,
+                             String viewId, String seqNum, BlockMessage blockMsg) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.cliMsgId = cliMsgId;
+        this.blockMsg = blockMsg;
     }
 
     @Override
@@ -64,11 +66,11 @@ public class PrePrepareMessage extends Message{
         this.seqNum = seqNum;
     }
 
-    public String getCliMsgId() {
-        return cliMsgId;
+    public BlockMessage getBlockMsg() {
+        return blockMsg;
     }
 
-    public void setCliMsgId(String cliMsgId) {
-        this.cliMsgId = cliMsgId;
+    public void setBlockMsg(BlockMessage blockMsg) {
+        this.blockMsg = blockMsg;
     }
 }

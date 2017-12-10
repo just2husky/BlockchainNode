@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.Map;
 
-import static service.TransactionService.genTx;
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
 import static util.SignatureUtil.loadPvtKey;
@@ -71,26 +70,6 @@ public class MessageService {
         return saveCliMsg(cliMsg, collectionName);
     }
 
-    public static boolean savePPMsg(PrePrepareMessage ppMsg, String collectionName){
-        if(MongoUtil.findByKV("msgId", ppMsg.getMsgId(), collectionName)) {
-            logger.info("ppMsg 消息 [" + ppMsg.getMsgId() + "] 已存在");
-            return false;
-        } else {
-            MongoUtil.insertJson(ppMsg.toString(), collectionName);
-            return true;
-        }
-    }
-
-    public static boolean savePPMsg(String ppMsgStr, String collectionName){
-        ClientMessage cliMsg = null;
-        try {
-            cliMsg = objectMapper.readValue(ppMsgStr, ClientMessage.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return saveCliMsg(cliMsg, collectionName);
-    }
-
     public static boolean savePMsg(PrepareMessage pMsg, String collectionName){
         if(MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
             logger.info("pMsg 消息 [" + pMsg.getMsgId() + "] 已存在");
@@ -110,45 +89,6 @@ public class MessageService {
             e.printStackTrace();
         }
         return saveCliMsg(cliMsg, collectionName);
-    }
-
-    public static PrePrepareMessage genPrePrepareMsg(String seqNum, String cliMsgId) {
-        String timestamp = TimeUtil.getNowTimeStamp();
-        String viewId = "1";
-
-        PrivateKey privateKey = loadPvtKey("EC");
-        String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getPPMSignContent(cliMsgId, viewId, seqNum, timestamp));
-        String msgId = getSha256Base64(signature);
-        return new PrePrepareMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, cliMsgId);
-    }
-
-    /**
-     * 检验 PrePrepareMessage的正确性
-     *
-     * @param ppm
-     * @return
-     */
-    public static boolean verifyPrePrepareMsg(PrePrepareMessage ppm) {
-        if (!SignatureUtil.verify(ppm.getPubKey(), getPPMSignContent(ppm.getCliMsgId(), ppm.getViewId(),
-                ppm.getSeqNum(), ppm.getTimestamp()), ppm.getSignature())) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 根据传入的内容生成 ppm 要签名的字符串
-     * @param cliMsgId
-     * @param viewId
-     * @param seqNum
-     * @param timestamp
-     * @return
-     */
-    public static String getPPMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp);
-        return sb.toString();
     }
 
     /**
@@ -282,15 +222,4 @@ public class MessageService {
         return newSeqNum;
     }
 
-    public static void main(String[] args) {
-        try {
-            ClientMessage txMsg = genTxMsg("cliMsg", genTx("string", "测试"));
-            logger.info(txMsg.toString());
-            PrePrepareMessage ppm = genPrePrepareMsg("1", txMsg.getTransaction().getTxId());
-            logger.info(ppm.toString());
-            logger.info(verifyPrePrepareMsg(ppm) + "");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }

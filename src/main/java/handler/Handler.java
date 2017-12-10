@@ -8,10 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import service.BlockMessageService;
-import service.CommitMessageService;
-import service.CommittedMessageService;
-import service.MessageService;
+import service.*;
 import util.*;
 
 import java.io.*;
@@ -127,8 +124,8 @@ public class Handler implements Runnable {
         // 3. 根据 Block Message 生成 PrePrepareMessage，存入到集合中
         String ppmCollection = url + "." + Const.PPM;
         BlockMessage blockMsg = objectMapper.readValue(rcvMsg, BlockMessage.class);
-        PrePrepareMessage ppm = MessageService.genPrePrepareMsg(Long.toString(seqNum), blockMsg.getMsgId());
-        MessageService.savePPMsg(ppm, ppmCollection);
+        PrePrepareMessage ppm = PrePrepareMessageService.genInstance(Long.toString(seqNum), blockMsg);
+        PrePrepareMessageService.save(ppm, ppmCollection);
 
         // 4. 主节点向其他备份节点广播 PrePrepareMessage
         broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
@@ -150,13 +147,13 @@ public class Handler implements Runnable {
         PrePrepareMessage ppm = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
         logger.info("接收到 PrePrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrePrepareMsg ...");
-        boolean verifyRes = MessageService.verifyPrePrepareMsg(ppm);
+        boolean verifyRes = PrePrepareMessageService.verify(ppm);
         logger.info("校验结束，结果为：" + verifyRes);
 
         if(verifyRes) {
             // 2. 校验结果为 true ，将 PrePrepareMessage 存入到集合中
             String ppmCollection = url + "." + Const.PPM;
-            if(MessageService.savePPMsg(ppm, ppmCollection)) {
+            if(PrePrepareMessageService.save(ppm, ppmCollection)) {
                 logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存入数据库");
             } else {
                 logger.info("PrePrepareMessage [" + ppm.getMsgId() + "] 已存在");
@@ -170,7 +167,6 @@ public class Handler implements Runnable {
             logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
             broadcastMsg(NetUtil.getRealIp(), localPort, pm.toString());
         }
-
         return verifyRes;
     }
 
@@ -216,7 +212,7 @@ public class Handler implements Runnable {
             if (2 * PeerUtil.getFaultCount() <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
-                PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getCliMsgId(), ppm.getViewId(),
+                PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                         ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                 if(MessageService.savePDMsg(pdm, pdmCollection)) {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
@@ -276,7 +272,7 @@ public class Handler implements Runnable {
             logger.info("count = " + count);
             // 3. 达成 count >= 2 * f 后存入到集合中
             if (2 * PeerUtil.getFaultCount() <= count) {
-                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getCliMsgId(), ppm.getViewId(),
+                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                         ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                 if(CommittedMessageService.save(cmtdm, cmtdmCollection)) {
                     logger.info("将 CommittedMessage [" + cmtdm.getMsgId() + "] 存入数据库");

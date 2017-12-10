@@ -105,7 +105,7 @@ public class MongoUtil {
         while(mongoCursor.hasNext()){
             record = mongoCursor.next().toJson();
             set.add(record);
-            logger.info("record: " + record);
+            logger.debug("record: " + record);
         }
         return set;
     }
