@@ -176,9 +176,9 @@ public class RabbitmqUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<String> msgList = rmq.pull(100000, 4.0/1024.0);
-        for(String msg : msgList) {
-            System.out.println(msg);
-        }
+//        List<String> msgList = rmq.pull(100000, 4.0/1024.0);
+//        for(String msg : msgList) {
+//            System.out.println(msg);
+//        }
     }
 }

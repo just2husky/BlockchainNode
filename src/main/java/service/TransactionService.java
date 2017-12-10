@@ -1,9 +1,11 @@
 package service;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.JsonUtil;
 import util.SignatureUtil;
 
 import java.io.IOException;
@@ -67,16 +69,11 @@ public class TransactionService {
      */
     public static List<Transaction> genTxList(String txListJson) {
         List<Transaction> txList = new ArrayList<Transaction>();
-        List<String> txStrList = new ArrayList<String>();
         try {
-            //noinspection unchecked
-            txStrList = objectMapper.readValue(txListJson, List.class);
+            JavaType javaType = JsonUtil.getCollectionType(ArrayList.class, Transaction.class);
+            txList = objectMapper.readValue(txListJson, javaType);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-
-        for (String txStr : txStrList) {
-            txList.add(genTx(txStr));
         }
         return txList;
     }

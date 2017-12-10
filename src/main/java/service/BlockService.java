@@ -81,7 +81,12 @@ public class BlockService {
                 }
             }
         }
-        return genBlock(preBlockId, txList);
+        if (txList.size() > 0) {
+            return genBlock(preBlockId, txList);
+        } else {
+            return null;
+        }
+
     }
 
     public static void main(String[] args) {

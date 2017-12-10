@@ -93,6 +93,17 @@ public class JsonUtil {
         return false;
     }
 
+    /**
+     * 获取泛型的Collection Type
+     * @param collectionClass 泛型的Collection
+     * @param elementClasses 元素类
+     * @return JavaType Java类型
+     * @since 1.0
+     */
+    public static JavaType getCollectionType(Class<?> collectionClass, Class<?>... elementClasses) {
+        return objMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
+    }
+
 
     public static void main(String[] args) {
         String jsonFile = ValidatorListFile;
