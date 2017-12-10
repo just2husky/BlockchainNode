@@ -59,6 +59,29 @@ public class TransactionService {
         }
         return null;
     }
+
+    /**
+     * 解析 tx json list
+     * @param txListJson
+     * @return
+     */
+    public static List<Transaction> genTxList(String txListJson) {
+        List<Transaction> txList = new ArrayList<Transaction>();
+        List<String> txStrList = new ArrayList<String>();
+        try {
+            //noinspection unchecked
+            txStrList = objectMapper.readValue(txListJson, List.class);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (String txStr : txStrList) {
+            txList.add(genTx(txStr));
+        }
+        return txList;
+    }
+
+
     /**
      * 获取 Transaction List 的所有 id
      * @param list
@@ -74,6 +97,8 @@ public class TransactionService {
 
 
     public static void main(String[] args) throws Exception {
-        System.out.println(genTx("string", "测试"));
+//        System.out.println(genTx("string", "测试"));
+        String mapStr = "{\"age\":30}";
+        genTx(mapStr);
     }
 }

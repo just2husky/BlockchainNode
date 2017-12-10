@@ -68,11 +68,29 @@ public class JsonUtil {
 
     /**
      * 从指定路径读取json文件，解析后返回对象 list
+     *
      * @return
      */
     public static List<ValidatorAddress> getValidatorAddressList(String jsonFile) {
         String jsonStr = getStrByJsonFile(jsonFile);
         return str2list(jsonStr, ValidatorAddress.class);
+    }
+
+    /**
+     * 判断json字符串是否是一个list
+     *
+     * @param jsonStr
+     * @return
+     */
+    public static boolean isList(String jsonStr) {
+        try {
+            if (objMapper.writeValueAsString(jsonStr).substring(1, 2).equals("[")) {
+                return true;
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
 
@@ -85,7 +103,7 @@ public class JsonUtil {
         // 2.
         List<ValidatorAddress> list = getValidatorAddressList(jsonFile);
 
-        for(ValidatorAddress validatorAddress : list) {
+        for (ValidatorAddress validatorAddress : list) {
             logger.info(validatorAddress.toString());
         }
     }

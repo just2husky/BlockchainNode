@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
 import entity.Transaction;
-import util.MerkleTree;
-import util.RabbitmqUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.security.PrivateKey;
 import java.util.ArrayList;
@@ -70,9 +67,18 @@ public class BlockService {
         List<Transaction> txList = new ArrayList<Transaction>();
         Transaction tx;
         for (String txJson : txJsonList) {
-            tx = TransactionService.genTx(txJson);
-            if (tx != null) {
-                txList.add(tx);
+            // 判断 json 是 tx 对象还是 tx list
+            if(JsonUtil.isList(txJson)) {
+                for (Transaction tmpTx : TransactionService.genTxList(txJson)) {
+                    if (tmpTx != null) {
+                        txList.add(tmpTx);
+                    }
+                }
+            } else {
+                tx = TransactionService.genTx(txJson);
+                if (tx != null) {
+                    txList.add(tx);
+                }
             }
         }
         return genBlock(preBlockId, txList);
