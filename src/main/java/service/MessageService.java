@@ -231,7 +231,7 @@ public class MessageService {
      * @param msgType 要生成的 msg 的类型，Const.PDM， Const.CMTDM
      */
     public static void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
-                                             String msgType, String ip, int port) {
+                                             String msgType, String ip, int port, String blockChainCollection) {
         Set<String> ppmSet = new HashSet<String>();
         while (true) {
             logger.info("开始遍历" + ppmCollection);
@@ -269,6 +269,7 @@ public class MessageService {
                                         ppm.getViewId(), ppm.getSeqNum(), ip, port);
                                 if(CommittedMessageService.save(cmtdm, saveCollection)) {
                                     logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存入数据库");
+                                    MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection);
                                 }
                             }
                         }
@@ -283,6 +284,24 @@ public class MessageService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * 将区块 block 保存到集合 blockChainCollection 中
+     * @param block
+     * @param blockChainCollection
+     * @return
+     */
+    public static boolean saveBlock(Block block, String blockChainCollection){
+        String blockId = block.getBlockId();
+        logger.info("开始保存区块：" + blockId);
+        if(MongoUtil.findByKV("blockId", blockId, blockChainCollection)) {
+            logger.info("block [" + blockId + "] 已存在");
+            return false;
+        } else {
+            MongoUtil.insertJson(block.toString(), blockChainCollection);
+            return true;
         }
     }
 }

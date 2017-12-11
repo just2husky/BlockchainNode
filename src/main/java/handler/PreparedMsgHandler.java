@@ -27,6 +27,6 @@ public class PreparedMsgHandler implements Runnable{
         String ppmCollection = url + "." + Const.PPM;
         String pmCollection = url + "." + Const.PM;
         String pdmCollection = url + "." + Const.PDM;
-        MessageService.traversePPMAndSaveMsg(ppmCollection, pmCollection, pdmCollection, Const.PDM, realIp, port);
+        MessageService.traversePPMAndSaveMsg(ppmCollection, pmCollection, pdmCollection, Const.PDM, realIp, port,null);
     }
 }

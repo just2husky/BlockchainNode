@@ -262,28 +262,31 @@ public class Handler implements Runnable {
             String cmtmCollection = url + "." + Const.CMTM;
             String cmtdmCollection = url + "." + Const.CMTDM;
             String ppmCollection = url + "." + Const.PPM;
+            String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
 
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(cmtm.getPpmSign()), ppmCollection);
+            if(ppm != null) {
+                // 1. 统计 ppmSign 出现的次数
+                int count = MongoUtil.countPPMSign(cmtm.getPpmSign(), cmtm.getViewId(), cmtm.getSeqNum(), cmtmCollection);
 
-            // 1. 统计 ppmSign 出现的次数
-            int count = MongoUtil.countPPMSign(cmtm.getPpmSign(), cmtm.getViewId(), cmtm.getSeqNum(), cmtmCollection);
+                // 2. 将 CommitMessage 存入到集合中
+                if (CommitMessageService.save(cmtm, cmtmCollection)) {
+                    logger.info("将CommitMessage [" + cmtm.getMsgId() + "] 存入数据库");
+                } else {
+                    logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存在");
+                }
 
-            // 2. 将 CommitMessage 存入到集合中
-            if(CommitMessageService.save(cmtm, cmtmCollection)) {
-                logger.info("将CommitMessage [" + cmtm.getMsgId() + "] 存入数据库");
-            } else {
-                logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存在");
-            }
-
-            logger.info("count = " + count);
-            // 3. 达成 count >= 2 * f 后存入到集合中
-            if (2 * PeerUtil.getFaultCount() <= count) {
-                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
-                        ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
-                if(CommittedMessageService.save(cmtdm, cmtdmCollection)) {
-                    logger.info("将 CommittedMessage [" + cmtdm.getMsgId() + "] 存入数据库");
-                }  else {
-                    logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
+                logger.info("count = " + count);
+                // 3. 达成 count >= 2 * f 后存入到集合中
+                if (2 * PeerUtil.getFaultCount() <= count) {
+                    CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                            ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
+                    if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
+                        logger.info("将 CommittedMessage [" + cmtdm.getMsgId() + "] 存入数据库");
+                        MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection);
+                    } else {
+                        logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
+                    }
                 }
             }
         }

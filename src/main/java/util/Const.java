@@ -17,6 +17,7 @@ public class Const {
     public final static String QUEUE_NAME = "TxQueue";
     public final static String CHAR_SET = "UTF-8";
     public final static String HASH_ALG = "SHA-256";
+    public final static String BLOCK_CHAIN = "BlockChain";
 
     public final static long SLEEP_TIME = 60000;
 }
