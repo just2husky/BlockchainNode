@@ -296,12 +296,6 @@ public class MessageService {
     public static boolean saveBlock(Block block, String blockChainCollection){
         String blockId = block.getBlockId();
         logger.info("开始保存区块：" + blockId);
-        if(MongoUtil.findByKV("blockId", blockId, blockChainCollection)) {
-            logger.info("block [" + blockId + "] 已存在");
-            return false;
-        } else {
-            MongoUtil.insertJson(block.toString(), blockChainCollection);
-            return true;
-        }
+        return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);
     }
 }

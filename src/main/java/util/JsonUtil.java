@@ -104,6 +104,15 @@ public class JsonUtil {
         return objMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
     }
 
+    public static String writeValueAsString(Object object) {
+        try {
+            return objMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
     public static void main(String[] args) {
         String jsonFile = ValidatorListFile;

@@ -164,7 +164,7 @@ public class RabbitmqUtil {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 50; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
 //                if(i<4) {
 //                    txList.add(tx);

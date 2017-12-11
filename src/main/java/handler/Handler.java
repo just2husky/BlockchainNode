@@ -282,8 +282,10 @@ public class Handler implements Runnable {
                     CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                             ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                     if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
-                        logger.info("将 CommittedMessage [" + cmtdm.getMsgId() + "] 存入数据库");
-                        MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection);
+                        logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
+                        if(MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
+                            logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
+                        }
                     } else {
                         logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
                     }

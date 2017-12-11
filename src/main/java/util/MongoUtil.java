@@ -1,15 +1,20 @@
 package util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.*;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import entity.CommittedMessage;
 import entity.Message;
 import entity.PrePrepareMessage;
 import entity.PrepareMessage;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.TransactionService;
@@ -43,6 +48,39 @@ public class MongoUtil {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         Document documentn = Document.parse(jsonStr);
         collection.insertOne(documentn);
+    }
+
+    /**
+     * 根据 key，value，将 json 数据插入到名字为 collectionName 的 collection（表） 中
+     *
+     * @param jsonStr
+     * @param collectionName
+     */
+    public static boolean upSertJson(String key, String value, String jsonStr, String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        Document document = Document.parse(jsonStr);
+        Bson filter = Filters.eq(key, value);
+        Bson update =  new Document("$set", document);
+        UpdateOptions options = new UpdateOptions().upsert(true);
+        UpdateResult updateResult = collection.updateOne(filter, update, options);
+        return updateResult.wasAcknowledged();
+    }
+
+    public static boolean upSertJson(Map<String, String> map, String jsonStr, String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        Document document = Document.parse(jsonStr);
+        Bson filter = null;
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            filter = Filters.and(Filters.eq(entry.getKey(), entry.getValue()));
+        }
+        if(filter != null) {
+            Bson update = new Document("$set", document);
+            UpdateOptions options = new UpdateOptions().upsert(true);
+            UpdateResult updateResult = collection.updateOne(filter, update, options);
+            return updateResult.wasAcknowledged();
+        }
+        logger.error("filter 为 null");
+        return false;
     }
 
     /**
