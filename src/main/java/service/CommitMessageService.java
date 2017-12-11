@@ -23,13 +23,23 @@ public class CommitMessageService {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getCMTMSignContent(ppmSign, viewId, seqNum, timestamp, ip, port));
+        String signature = SignatureUtil.sign(privateKey, getSignContent(ppmSign, viewId, seqNum, timestamp, ip, port));
         String msgId = getSha256Base64(signature);
         return new CommitMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, ppmSign, ip, port);
 
     }
 
-    public static String getCMTMSignContent(String ppmSign, String viewId, String seqNum, String timestamp, String ip, int port) {
+    /**
+     * 生成签名的内容
+     * @param ppmSign
+     * @param viewId
+     * @param seqNum
+     * @param timestamp
+     * @param ip
+     * @param port
+     * @return
+     */
+    public static String getSignContent(String ppmSign, String viewId, String seqNum, String timestamp, String ip, int port) {
         StringBuilder sb = new StringBuilder();
         sb.append(ppmSign).append(viewId).append(seqNum).append(timestamp).append(ip).append(port);
         return sb.toString();
@@ -46,7 +56,7 @@ public class CommitMessageService {
     }
 
     public static boolean verify(CommitMessage cmtm) {
-        return SignatureUtil.verify(cmtm.getPubKey(), getCMTMSignContent(cmtm.getPpmSign(), cmtm.getViewId(),
+        return SignatureUtil.verify(cmtm.getPubKey(), getSignContent(cmtm.getPpmSign(), cmtm.getViewId(),
                 cmtm.getSeqNum(), cmtm.getTimestamp(), cmtm.getIp(), cmtm.getPort()), cmtm.getSignature());
     }
 }

@@ -9,6 +9,11 @@ import service.TransactionService;
  */
 public class MongoUtilTest {
     @Test
+    public void findPM() throws Exception {
+
+    }
+
+    @Test
     public void dropAllCollections() throws Exception {
         MongoUtil.dropAllCollections();
     }

@@ -30,7 +30,6 @@ public class Blocker implements Runnable{
             if (block != null) {
                 logger.info("生成 block：" + block.getBlockId());
                 preBlockId = block.getBlockId();
-                logger.info("开始发送 block：");
                 sendBlock(block);
             }
 
@@ -44,6 +43,7 @@ public class Blocker implements Runnable{
 
     @SuppressWarnings("Duplicates")
     public void sendBlock(Block block) {
+        logger.info("开始发送 block: " + block.getBlockId());
         Socket client = new Socket();
         SocketAddress socketAddress = new InetSocketAddress(primaryValidatorIP, primaryValidatorPort);
         try {

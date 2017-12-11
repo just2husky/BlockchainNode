@@ -1,9 +1,12 @@
 package util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.*;
+import entity.CommittedMessage;
+import entity.Message;
 import entity.PrePrepareMessage;
 import entity.PrepareMessage;
 import org.bson.Document;
@@ -24,13 +27,15 @@ public class MongoUtil {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private static MongoClient mongoClient;
     private static MongoDatabase mongoDatabase;
+
     static {
-        mongoClient = new MongoClient( "localhost" , 27017 );
+        mongoClient = new MongoClient("localhost", 27017);
         mongoDatabase = mongoClient.getDatabase("mycol");
     }
 
     /**
      * 将 json 数据插入到名字为 collectionName 的 collection（表） 中
+     *
      * @param jsonStr
      * @param collectionName
      */
@@ -42,6 +47,7 @@ public class MongoUtil {
 
     /**
      * 插入key-value
+     *
      * @param key
      * @param value
      * @param collectionName
@@ -54,6 +60,7 @@ public class MongoUtil {
 
     /**
      * 修改键为 key 值为 oldValue 的值为 newValue
+     *
      * @param key
      * @param oldValue
      * @param newValue
@@ -62,11 +69,12 @@ public class MongoUtil {
     public static void updateKV(String key, String oldValue, String newValue, String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         //更新文档   将文档中likes=100的文档修改为likes=200
-        collection.updateMany(eq(key, oldValue), new Document("$set",new Document(key, newValue)));
+        collection.updateMany(eq(key, oldValue), new Document("$set", new Document(key, newValue)));
     }
 
     /**
      * 判断 collectionName 是否存在
+     *
      * @param collectionName
      * @return
      */
@@ -77,6 +85,7 @@ public class MongoUtil {
 
     /**
      * 查找集合 collectionName 中的第一条记录，以 json 形式返回
+     *
      * @param collectionName
      * @return
      */
@@ -88,6 +97,7 @@ public class MongoUtil {
 
     /**
      * 根据 collectionName 遍历 collection
+     *
      * @param collectionName
      */
     public static Set<String> traverse(String collectionName) {
@@ -102,7 +112,7 @@ public class MongoUtil {
         MongoCursor<Document> mongoCursor = findIterable.iterator();
         Set<String> set = new HashSet<String>();
         String record;
-        while(mongoCursor.hasNext()){
+        while (mongoCursor.hasNext()) {
             record = mongoCursor.next().toJson();
             set.add(record);
             logger.debug("record: " + record);
@@ -131,6 +141,7 @@ public class MongoUtil {
 
     /**
      * 在名字为 collectionName 的集合里查找同时匹配k,v的值，若查找到则返回 True
+     *
      * @param key
      * @param value
      * @param collectionName
@@ -148,6 +159,7 @@ public class MongoUtil {
 
     /**
      * 统计 key, value 出现的次数
+     *
      * @param key
      * @param value
      * @param collectionName
@@ -166,6 +178,7 @@ public class MongoUtil {
 
     /**
      * 副本节点通过检查它们是否具有相同的视图，序列号和摘要来验证准备消息是否与预准备消息相匹配。
+     *
      * @param ppmSign
      * @param viewId
      * @param seqNum
@@ -187,7 +200,7 @@ public class MongoUtil {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
+            if (pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
                 count++;
             }
         }
@@ -195,7 +208,36 @@ public class MongoUtil {
     }
 
     /**
+     * 根据 ppmSign, viewId, seqNum 在 pmCollection 中查找一个 PrepareMessage 或 CommittedMessage
+     *
+     * @param ppmSign
+     * @param viewId
+     * @param seqNum
+     * @param pmCollection
+     * @return
+     */
+    public static Message findPM(String ppmSign, String viewId, String seqNum, String pmCollection, String msgType) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(pmCollection);
+        BasicDBObject query = new BasicDBObject("ppmSign", new BasicDBObject("$eq", ppmSign))
+                .append("viewId", new BasicDBObject("$eq", viewId))
+                .append("seqNum", new BasicDBObject("$eq", seqNum));
+//        String pmStr = collection.find(query).first().toJson();
+        try {
+            if (msgType.equals(Const.PM)) {
+                return objectMapper.readValue(collection.find(query).first().toJson(), PrepareMessage.class);
+            } else if (msgType.equals(Const.CMTM)) {
+                return objectMapper.readValue(collection.find(query).first().toJson(), CommittedMessage.class);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * 根据 ppm 的id查找 ppm，若存在则返回 PrePrepareMessage，否则就返回null
+     *
      * @param ppmId
      * @param collectionName
      * @return
@@ -224,10 +266,10 @@ public class MongoUtil {
         }
     }
 
-    public static void main( String args[] ){
-        try{
+    public static void main(String args[]) {
+        try {
             // 连接到 mongodb 服务
-            MongoClient mongoClient = new MongoClient( "localhost" , 27017 );
+            MongoClient mongoClient = new MongoClient("localhost", 27017);
 
             // 连接到数据库
             MongoDatabase mongoDatabase = mongoClient.getDatabase("mycol");
@@ -236,8 +278,8 @@ public class MongoUtil {
 //            System.out.println("集合创建成功");
 
             traverse("test");
-        }catch(Exception e){
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
 }

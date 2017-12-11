@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import static java.lang.Thread.sleep;
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
 import static util.SignatureUtil.loadPvtKey;
@@ -222,4 +223,66 @@ public class MessageService {
         return newSeqNum;
     }
 
+    /**
+     * 每隔 Const.SLEEP_TIME 时间便查看一下 ppmCollection，检查 PreparedMessage 或 Committed Message 是否生成
+     * @param ppmCollection
+     * @param traverseCollection
+     * @param saveCollection
+     * @param msgType 要生成的 msg 的类型，Const.PDM， Const.CMTDM
+     */
+    public static void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
+                                             String msgType, String ip, int port) {
+        Set<String> ppmSet = new HashSet<String>();
+        while (true) {
+            logger.info("开始遍历" + ppmCollection);
+            ppmSet = MongoUtil.traverse(ppmCollection);
+            for(String ppmStr : ppmSet) {
+                PrePrepareMessage ppm = null;
+                try {
+                    ppm = objectMapper.readValue(ppmStr, PrePrepareMessage.class);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if(ppm != null) {
+                    logger.info("开始统计 " + ppm.getSignature() + "在 " + traverseCollection + " 出现的次数");
+                    // 1. 统计 ppmSign 出现的次数
+                    int count = MongoUtil.countPPMSign(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(), traverseCollection);
+
+                    logger.info(ppm.getSignature() + "在 " + traverseCollection + " 出现的次数为： " + count);
+                    if(!MongoUtil.findByKV("cliMsgId", ppm.getBlockMsg().getMsgId(), saveCollection)) {
+                        if (2 * PeerUtil.getFaultCount() <= count) {
+                            if(msgType.equals(Const.PDM)) {
+//                                PrepareMessage pm = (PrepareMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
+//                                        ppm.getSeqNum(), traverseCollection, msgType);
+                                logger.info("开始生成 PreparedMessage 并存入数据库");
+                                PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                                        ppm.getSeqNum(), ip, port);
+                                if (MessageService.savePDMsg(pdm, saveCollection)) {
+                                    logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
+                                }
+                            }
+                            else if(msgType.equals(Const.CMTDM)) {
+//                                CommittedMessage cmtMsg = (CommittedMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
+//                                        ppm.getSeqNum(), traverseCollection, msgType);
+                                logger.info("开始生成 CommittedMessage 并存入数据库");
+                                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(),
+                                        ppm.getViewId(), ppm.getSeqNum(), ip, port);
+                                if(CommittedMessageService.save(cmtdm, saveCollection)) {
+                                    logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存入数据库");
+                                }
+                            }
+                        }
+                    } else {
+                        logger.info(msgType + "已存在，不需要存入");
+                    }
+                }
+            }
+
+            try {
+                sleep(Const.SLEEP_TIME);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

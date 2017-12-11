@@ -1,5 +1,6 @@
 package socket;
 
+import handler.CommittedMsgHandler;
 import handler.PreparedMsgHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,9 @@ public class ValidatorServer implements Runnable
                     + serverSocket.getLocalPort() + "] 启动");
             logger.info("启动检测生成 PreparedMessage 的服务器");
             new Thread(new PreparedMsgHandler(NetUtil.getRealIp(), serverSocket.getLocalPort())).start();
+            logger.info("启动检测生成 CommittedMessage 的服务器");
+            new Thread(new CommittedMsgHandler(NetUtil.getRealIp(), serverSocket.getLocalPort())).start();
+
             while(true) {
                 threadPool.execute(new Handler(serverSocket.accept()));
             }

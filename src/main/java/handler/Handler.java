@@ -43,7 +43,7 @@ public class Handler implements Runnable {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             String rcvMsg = in.readUTF();
             String msgType = (String) objectMapper.readValue(rcvMsg, Map.class).get("msgType");
-            logger.info("接收到的 Msg 类型为： [" + msgType + "] -< 内容为：" + rcvMsg);
+            logger.info("接收到的 Msg 类型为： [" + msgType + "]");
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 //            out.writeUTF("接收到你发来的消息");
 //            out.flush();
@@ -145,7 +145,7 @@ public class Handler implements Runnable {
 
         // 1. 校验接收到的 PrePrepareMessage
         PrePrepareMessage ppm = objectMapper.readValue(rcvMsg, PrePrepareMessage.class);
-        logger.info("接收到 PrePrepareMsg：" + rcvMsg);
+        logger.info("接收到 PrePrepareMsg：" + ppm.getMsgId());
         logger.info("开始校验 PrePrepareMsg ...");
         boolean verifyRes = PrePrepareMessageService.verify(ppm);
         logger.info("校验结束，结果为：" + verifyRes);
@@ -240,6 +240,12 @@ public class Handler implements Runnable {
         return true;
     }
 
+    /**
+     * 处理接收到的 commit message
+     * @param rcvMsg
+     * @param localPort
+     * @throws IOException
+     */
     public static void procCMTM(String rcvMsg, int localPort) throws IOException {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
