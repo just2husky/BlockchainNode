@@ -212,9 +212,9 @@ public class Handler implements Runnable {
             if (2 * PeerUtil.getFaultCount() <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
-                PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                         ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
-                if(MessageService.savePDMsg(pdm, pdmCollection)) {
+                if(PreparedMessageService.save(pdm, pdmCollection)) {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
                     CommitMessage cmtm = CommitMessageService.genCommitMsg(ppm.getSignature(), ppm.getViewId(),
                             ppm.getSeqNum(), NetUtil.getRealIp(), localPort);

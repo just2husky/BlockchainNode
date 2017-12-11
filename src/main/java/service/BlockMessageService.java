@@ -20,7 +20,7 @@ import static util.SignatureUtil.loadPvtKey;
  * Created by chao on 2017/12/10.
  */
 public class BlockMessageService {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     /**

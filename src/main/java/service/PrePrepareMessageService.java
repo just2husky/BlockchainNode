@@ -20,7 +20,7 @@ import static util.SignatureUtil.loadPvtKey;
  * Created by chao on 2017/12/10.
  */
 public class PrePrepareMessageService {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(PrePrepareMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     @SuppressWarnings("Duplicates")

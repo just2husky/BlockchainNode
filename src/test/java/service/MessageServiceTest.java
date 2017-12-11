@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
  * Created by chao on 2017/11/29.
  */
 public class MessageServiceTest {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(MessageServiceTest.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     @Test
     public void genPrepareMsg() throws Exception {

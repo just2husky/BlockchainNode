@@ -21,8 +21,9 @@ import static util.SignatureUtil.loadPvtKey;
  * Created by chao on 2017/11/21.
  */
 public class MessageService {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * 根据 msgType 和 transaction 生成 message
      *
@@ -41,12 +42,13 @@ public class MessageService {
 
     /**
      * 将 ClientMessage 对象存入集合 collectionName 中。
+     *
      * @param cliMsg
      * @param collectionName
      * @return
      */
-    public static boolean saveCliMsg(ClientMessage cliMsg, String collectionName){
-        if(MongoUtil.findByKV("msgId", cliMsg.getMsgId(), collectionName)) {
+    public static boolean saveCliMsg(ClientMessage cliMsg, String collectionName) {
+        if (MongoUtil.findByKV("msgId", cliMsg.getMsgId(), collectionName)) {
             logger.info("cliMsg 消息 [" + cliMsg.getMsgId() + "] 已存在");
             return false;
         } else {
@@ -57,11 +59,12 @@ public class MessageService {
 
     /**
      * 将 ClientMessage json 字符串存入集合 collectionName 中。
+     *
      * @param cliMsgStr
      * @param collectionName
      * @return
      */
-    public static boolean saveCliMsg(String cliMsgStr, String collectionName){
+    public static boolean saveCliMsg(String cliMsgStr, String collectionName) {
         ClientMessage cliMsg = null;
         try {
             cliMsg = objectMapper.readValue(cliMsgStr, ClientMessage.class);
@@ -71,8 +74,8 @@ public class MessageService {
         return saveCliMsg(cliMsg, collectionName);
     }
 
-    public static boolean savePMsg(PrepareMessage pMsg, String collectionName){
-        if(MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
+    public static boolean savePMsg(PrepareMessage pMsg, String collectionName) {
+        if (MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
             logger.info("pMsg 消息 [" + pMsg.getMsgId() + "] 已存在");
             return false;
         } else {
@@ -82,7 +85,7 @@ public class MessageService {
 //        return false;
     }
 
-    public static boolean savePMsg(String pMsgStr, String collectionName){
+    public static boolean savePMsg(String pMsgStr, String collectionName) {
         ClientMessage cliMsg = null;
         try {
             cliMsg = objectMapper.readValue(pMsgStr, ClientMessage.class);
@@ -94,7 +97,8 @@ public class MessageService {
 
     /**
      * 根据传入的内容生成 pm 要签名的字符串
-     * @param ppmSign ppm消息中的数字签名，相当于消息 m 的 digest d.
+     *
+     * @param ppmSign   ppm消息中的数字签名，相当于消息 m 的 digest d.
      * @param viewId
      * @param seqNum
      * @param timestamp
@@ -108,6 +112,7 @@ public class MessageService {
 
     /**
      * 根据相关字段生成 PrepareMessage
+     *
      * @param ppmSign ppm消息中的数字签名，相当于消息 m 的 digest d.
      * @param viewId
      * @param seqNum
@@ -133,41 +138,9 @@ public class MessageService {
         return true;
     }
 
-    public static PreparedMessage genPreparedMsg(String cliMsgId, String viewId, String seqNum, String ip, int port) {
-        String timestamp = TimeUtil.getNowTimeStamp();
-        PrivateKey privateKey = loadPvtKey("EC");
-        String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getPDMSignContent(cliMsgId, viewId, seqNum, timestamp, ip, port));
-        String msgId = getSha256Base64(signature);
-        return new PreparedMessage(msgId, timestamp, pubKey, signature, cliMsgId, viewId, seqNum, ip, port);
-    }
-
-    public static boolean verifyPreparedMsg(PreparedMessage pdm) {
-        if (!SignatureUtil.verify(pdm.getPubKey(), getPMSignContent(pdm.getCliMsgId(), pdm.getViewId(),
-                pdm.getSeqNum(), pdm.getTimestamp(), pdm.getIp(), pdm.getPort()), pdm.getSignature())) {
-            return false;
-        }
-        return true;
-    }
-
-    public static boolean savePDMsg(PreparedMessage pdm, String collectionName){
-        if(MongoUtil.findByKV("msgId", pdm.getMsgId(), collectionName)) {
-            logger.info("pdm 消息 [" + pdm.getMsgId() + "] 已存在");
-            return false;
-        } else {
-            MongoUtil.insertJson(pdm.toString(), collectionName);
-            return true;
-        }
-    }
-
-    public static String getPDMSignContent(String cliMsgId, String viewId, String seqNum, String timestamp, String ip, int port) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(cliMsgId).append(viewId).append(seqNum).append(timestamp).append(ip).append(port);
-        return sb.toString();
-    }
-
     /**
      * 生成 Message 类的对象
+     *
      * @param msgType
      * @param sigContent
      * @return
@@ -183,18 +156,19 @@ public class MessageService {
 
     /**
      * 到 collectionName 里去获取当前的序列号
+     *
      * @param collectionName
      * @return
      * @throws Exception
      */
     public static long getSeqNum(String collectionName) throws Exception {
-        if(!MongoUtil.collectionExists(collectionName)) {
+        if (!MongoUtil.collectionExists(collectionName)) {
             logger.info("集合" + collectionName + "不存在，开始创建");
             MongoUtil.insertKV("seqNum", "0", collectionName);
             return 0;
         } else {
             String record = MongoUtil.findFirstDoc(collectionName);
-            if(record != null && !record.equals("")) {
+            if (record != null && !record.equals("")) {
                 long seqNum = -1;
                 try {
                     seqNum = Long.parseLong((String) objectMapper.readValue(record, Map.class).get("seqNum"));
@@ -203,8 +177,7 @@ public class MessageService {
                 }
                 return seqNum;
 
-            }
-            else {
+            } else {
                 throw new Exception("获取 seqNum 失败！");
             }
         }
@@ -212,6 +185,7 @@ public class MessageService {
 
     /**
      * 到 collectionName 里去获取更新的序列号
+     *
      * @param collectionName
      * @throws Exception
      */
@@ -225,10 +199,11 @@ public class MessageService {
 
     /**
      * 每隔 Const.SLEEP_TIME 时间便查看一下 ppmCollection，检查 PreparedMessage 或 Committed Message 是否生成
+     *
      * @param ppmCollection
      * @param traverseCollection
      * @param saveCollection
-     * @param msgType 要生成的 msg 的类型，Const.PDM， Const.CMTDM
+     * @param msgType            要生成的 msg 的类型，Const.PDM， Const.CMTDM
      */
     public static void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
                                              String msgType, String ip, int port, String blockChainCollection) {
@@ -236,40 +211,41 @@ public class MessageService {
         while (true) {
             logger.info("开始遍历" + ppmCollection);
             ppmSet = MongoUtil.traverse(ppmCollection);
-            for(String ppmStr : ppmSet) {
+            for (String ppmStr : ppmSet) {
                 PrePrepareMessage ppm = null;
                 try {
                     ppm = objectMapper.readValue(ppmStr, PrePrepareMessage.class);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                if(ppm != null) {
+                if (ppm != null) {
                     logger.info("开始统计 " + ppm.getSignature() + "在 " + traverseCollection + " 出现的次数");
                     // 1. 统计 ppmSign 出现的次数
                     int count = MongoUtil.countPPMSign(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(), traverseCollection);
 
                     logger.info(ppm.getSignature() + "在 " + traverseCollection + " 出现的次数为： " + count);
-                    if(!MongoUtil.findByKV("cliMsgId", ppm.getBlockMsg().getMsgId(), saveCollection)) {
+                    if (!MongoUtil.findByKV("cliMsgId", ppm.getBlockMsg().getMsgId(), saveCollection)) {
                         if (2 * PeerUtil.getFaultCount() <= count) {
-                            if(msgType.equals(Const.PDM)) {
+                            if (msgType.equals(Const.PDM)) {
 //                                PrepareMessage pm = (PrepareMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
 //                                        ppm.getSeqNum(), traverseCollection, msgType);
                                 logger.info("开始生成 PreparedMessage 并存入数据库");
-                                PreparedMessage pdm = MessageService.genPreparedMsg(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
                                         ppm.getSeqNum(), ip, port);
-                                if (MessageService.savePDMsg(pdm, saveCollection)) {
+                                if (PreparedMessageService.save(pdm, saveCollection)) {
                                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
                                 }
-                            }
-                            else if(msgType.equals(Const.CMTDM)) {
+                            } else if (msgType.equals(Const.CMTDM)) {
 //                                CommittedMessage cmtMsg = (CommittedMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
 //                                        ppm.getSeqNum(), traverseCollection, msgType);
                                 logger.info("开始生成 CommittedMessage 并存入数据库");
                                 CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(),
                                         ppm.getViewId(), ppm.getSeqNum(), ip, port);
-                                if(CommittedMessageService.save(cmtdm, saveCollection)) {
+                                if (CommittedMessageService.save(cmtdm, saveCollection)) {
                                     logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存入数据库");
-                                    MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection);
+                                    if (MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
+                                        logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
+                                    }
                                 }
                             }
                         }
@@ -289,11 +265,12 @@ public class MessageService {
 
     /**
      * 将区块 block 保存到集合 blockChainCollection 中
+     *
      * @param block
      * @param blockChainCollection
      * @return
      */
-    public static boolean saveBlock(Block block, String blockChainCollection){
+    public static boolean saveBlock(Block block, String blockChainCollection) {
         String blockId = block.getBlockId();
         logger.info("开始保存区块：" + blockId);
         return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);

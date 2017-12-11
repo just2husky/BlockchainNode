@@ -16,7 +16,7 @@ import static util.SignatureUtil.*;
  * Created by chao on 2017/11/21.
  */
 public class CommitMessageService {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(CommitMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     public static CommitMessage genCommitMsg(String ppmSign, String viewId, String seqNum, String ip, int port) {

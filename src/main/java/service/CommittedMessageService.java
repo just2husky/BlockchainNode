@@ -23,7 +23,7 @@ import static util.SignatureUtil.loadPvtKey;
  * Created by chao on 2017/11/21.
  */
 public class CommittedMessageService {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(CommittedMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     public static CommittedMessage genInstance(String cliMsgId, String viewId, String seqNum, String ip, int port) {
@@ -44,13 +44,6 @@ public class CommittedMessageService {
         map.put("viewId", cmtdm.getViewId());
         map.put("seqNum", cmtdm.getSeqNum());
         return MongoUtil.upSertJson(map, cmtdm.toString(), collectionName);
-//        if(MongoUtil.findByKV("cliMsgId", cmtdm.getCliMsgId(), collectionName)) {
-//            logger.info("cmtdm 消息 [" + cmtdm.getMsgId() + "] 已存在");
-//            return false;
-//        } else {
-//            MongoUtil.insertJson(cmtdm.toString(), collectionName);
-//            return true;
-//        }
     }
 
     public static boolean verify(CommittedMessage cm) {

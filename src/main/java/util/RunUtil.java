@@ -20,7 +20,7 @@ public class RunUtil {
      */
     @Test
     public void countRecordQuantity() {
-        String realIp = "202.115.53.57";
+        String realIp = NetUtil.getRealIp();
         String url;
         String ppmCollection;
         String pmCollection;
@@ -44,13 +44,15 @@ public class RunUtil {
             long cmtmCount = MongoUtil.countRecords(cmtmCollection);
             long cmtdmCount = MongoUtil.countRecords(cmtdmCollection);
             long blockChainCount = MongoUtil.countRecords(blockChainCollection);
+            int blockIdCount = MongoUtil.countValuesByKey("blockId", blockChainCollection);
 
             System.out.println("主机 [ " + url + " ] < ppmCount: " + ppmCount
                     + ", pmCount: " + pmCount
                     + ", pdmCount: " + pdmCount
                     + ", cmtmCount: " + cmtmCount
                     + ", cmtdmCount: " + cmtdmCount
-                    + ", blockChainCount: " + blockChainCount);
+                    + ", blockChainCount: " + blockChainCount
+                    + ", blockIdCount: " + blockIdCount);
         }
     }
 
@@ -71,7 +73,7 @@ public class RunUtil {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
-            for (int i = 0; i < 50; i++) {
+            for (int i = 0; i < 500; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
 //                if(i<4) {
 //                    txList.add(tx);
@@ -87,6 +89,18 @@ public class RunUtil {
 //        for(String msg : msgList) {
 //            System.out.println(msg);
 //        }
+    }
+
+    @Test
+    public void countBlocks(){
+        String realIp = NetUtil.getRealIp();
+        String url;
+        String blockChainCollection;
+        for (int port = 8000; port < 8004; port ++) {
+            url = realIp + ":" + port;
+            blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+            MongoUtil.findValuesByKey("blockId", blockChainCollection);
+        }
     }
 
 }

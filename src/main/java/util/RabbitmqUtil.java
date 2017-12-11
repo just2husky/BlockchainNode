@@ -137,7 +137,7 @@ public class RabbitmqUtil {
                         channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
 
                     } else {
-                        logger.info("大小超出限制，停止接收该消息");
+                        logger.info("大小超出限制，停止接收该消息，准备生成区块");
                         // requeue - true if the rejected message should be requeued rather than discarded/dead-lettered
                         channel.basicReject(response.getEnvelope().getDeliveryTag(), true);
                         break;

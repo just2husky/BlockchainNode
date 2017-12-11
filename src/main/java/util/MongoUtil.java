@@ -27,7 +27,7 @@ import static com.mongodb.client.model.Filters.eq;
  * Created by chao on 2017/11/27.
  */
 public class MongoUtil {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(MongoUtil.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private static MongoClient mongoClient;
     private static MongoDatabase mongoDatabase;
@@ -311,6 +311,33 @@ public class MongoUtil {
     public static long countRecords(String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         return collection.count();
+    }
+
+    /**
+     * 根据 key 获取所有对应的value
+     * @param key
+     * @param collectionName
+     * @return
+     */
+    public static Set<String> findValuesByKey(String key, String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        MongoCursor<String> mongoCursor = collection.distinct(key, String.class).iterator();
+        Set<String> blockIdSet = new HashSet<String>();
+        while (mongoCursor.hasNext()) {
+            blockIdSet.add(mongoCursor.next());
+        }
+//        System.out.println("blockIdSet长度为： " + blockIdSet.size());
+        return blockIdSet;
+    }
+
+    /**
+     * 根据 key 统计去重统计所有value的个数
+     * @param key
+     * @param collectionName
+     * @return
+     */
+    public static int countValuesByKey(String key, String collectionName) {
+        return findValuesByKey(key, collectionName).size();
     }
 
     public static void main(String args[]) {
