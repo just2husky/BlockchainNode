@@ -9,6 +9,11 @@ import service.TransactionService;
  */
 public class MongoUtilTest {
     @Test
+    public void countRecords() throws Exception {
+        System.out.println(MongoUtil.countRecords("202.115.53.57:8001.CommittedMsg"));
+    }
+
+    @Test
     public void findPM() throws Exception {
 
     }

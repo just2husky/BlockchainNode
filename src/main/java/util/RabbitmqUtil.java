@@ -160,25 +160,4 @@ public class RabbitmqUtil {
         return msgList;
     }
 
-    public static void main(String[] args) throws IOException, TimeoutException {
-        RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
-        List<Transaction> txList = new ArrayList<Transaction>();
-        try {
-            for (int i = 0; i < 50; i++) {
-                Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
-//                if(i<4) {
-//                    txList.add(tx);
-//                }
-                rmq.push(tx.toString());
-            }
-//            rmq.push(objectMapper.writeValueAsString(txList));
-//            logger.info(objectMapper.writeValueAsString(txList).substring(0,1));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-//        List<String> msgList = rmq.pull(100000, 4.0/1024.0);
-//        for(String msg : msgList) {
-//            System.out.println(msg);
-//        }
-    }
 }

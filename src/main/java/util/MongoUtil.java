@@ -1,6 +1,5 @@
 package util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Block;
@@ -302,6 +301,16 @@ public class MongoUtil {
                 mongoDatabase.getCollection(s).drop();
             }
         }
+    }
+
+    /**
+     * 获取集合 collectionName 中的记录数
+     * @param collectionName
+     * @return
+     */
+    public static long countRecords(String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        return collection.count();
     }
 
     public static void main(String args[]) {
