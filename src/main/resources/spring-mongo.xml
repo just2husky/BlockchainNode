@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/data/mongo
+        http://www.springframework.org/schema/data/mongo/spring-mongo.xsd">
+    <!-- MongoDB factory  -->
+    <mongo:db-factory id="mongoDbFactory" host="localhost" port="27017" dbname="mycol" />
+
+    <!-- MongoTemplate -->
+    <mongo:template db-factory-ref="mongoDbFactory"/>
+    <!-- 自动扫描该包下的repository，自动生成实现了类，根据接口的函数名生成相应的操作  -->
+    <mongo:repositories base-package="demo"/>
+
+</beans>
