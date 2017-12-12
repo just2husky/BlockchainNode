@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
 import entity.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.*;
 
 import java.security.PrivateKey;
@@ -19,6 +21,7 @@ import static util.SignatureUtil.loadPvtKey;
  */
 public class BlockService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final static Logger logger = LoggerFactory.getLogger(BlockService.class);
     /**
      * 根据如下参数算出当前区块的id，并构造Block对象
      *
@@ -87,6 +90,20 @@ public class BlockService {
             return null;
         }
 
+    }
+
+    /**
+     * 将区块 block 保存到集合 blockChainCollection 中
+     *
+     * @param block
+     * @param blockChainCollection
+     * @return
+     */
+    public static boolean saveBlock(Block block, String blockChainCollection) {
+        String blockId = block.getBlockId();
+        logger.info("开始保存区块：" + blockId);
+        return MongoUtil.upSertBlock(block, blockChainCollection);
+//        return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);
     }
 
     public static void main(String[] args) {

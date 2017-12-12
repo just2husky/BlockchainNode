@@ -283,7 +283,7 @@ public class Handler implements Runnable {
                             ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                     if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
                         logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
-                        if(MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
+                        if(BlockService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
                             logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
                         }
                     } else {

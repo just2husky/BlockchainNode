@@ -2,12 +2,14 @@ package entity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
 /**
  * Created by chao on 2017/11/17.
  */
+@Document(collection="10.68.1.29:8000.BlockChain")
 public class Block {
     private String blockId;
     private String preBlockId;

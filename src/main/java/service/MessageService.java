@@ -243,7 +243,7 @@ public class MessageService {
                                         ppm.getViewId(), ppm.getSeqNum(), ip, port);
                                 if (CommittedMessageService.save(cmtdm, saveCollection)) {
                                     logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存入数据库");
-                                    if (MessageService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
+                                    if (BlockService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
                                         logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
                                     }
                                 }
@@ -263,16 +263,5 @@ public class MessageService {
         }
     }
 
-    /**
-     * 将区块 block 保存到集合 blockChainCollection 中
-     *
-     * @param block
-     * @param blockChainCollection
-     * @return
-     */
-    public static boolean saveBlock(Block block, String blockChainCollection) {
-        String blockId = block.getBlockId();
-        logger.info("开始保存区块：" + blockId);
-        return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);
-    }
+
 }

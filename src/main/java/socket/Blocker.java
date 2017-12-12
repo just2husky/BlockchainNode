@@ -22,7 +22,7 @@ public class Blocker implements Runnable{
     public void run() {
         String queueName = Const.QUEUE_NAME;
         String preBlockId = "0";
-        double limitTime = 100000; // 单位毫秒
+        double limitTime = 10000; // 单位毫秒
         double limitSize = 2.0/1024.0; // 单位 MB
         Block block;
         while (true) {
