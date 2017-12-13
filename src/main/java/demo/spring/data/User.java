@@ -1,13 +1,15 @@
-package demo;
+package demo.spring.data;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.annotation.Id;
 
+import java.io.Serializable;
+
 /**
  * Created by chao on 2017/12/12.
  */
-public class User {
+public class User implements Serializable{
     /**
      * 标识ID信息
      * 插入数据时如果没有提供，MongoDB会自动生成

@@ -1,4 +1,4 @@
-package demo;
+package demo.spring.data;
 
 import entity.Block;
 import org.springframework.beans.factory.annotation.Autowired;
