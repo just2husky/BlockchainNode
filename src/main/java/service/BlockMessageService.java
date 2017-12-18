@@ -26,6 +26,7 @@ public class BlockMessageService {
 
     /**
      * 根据 block 对象，生成 BlockMessage 对象
+     *
      * @param block
      * @return
      */
@@ -40,11 +41,12 @@ public class BlockMessageService {
 
     /**
      * 将 BlockMessage json 字符串存入集合 collectionName 中。
+     *
      * @param blockMsgStr
      * @param collectionName
      * @return
      */
-    public static boolean save(String blockMsgStr, String collectionName){
+    public static boolean save(String blockMsgStr, String collectionName) {
         BlockMessage blockMsg = null;
         try {
             blockMsg = objectMapper.readValue(blockMsgStr, BlockMessage.class);
@@ -56,12 +58,13 @@ public class BlockMessageService {
 
     /**
      * 将 BlockMessage 对象存入集合 collectionName 中。
+     *
      * @param blockMsg
      * @param collectionName
      * @return
      */
-    public static boolean save(BlockMessage blockMsg, String collectionName){
-        if(MongoUtil.findByKV("msgId", blockMsg.getMsgId(), collectionName)) {
+    public static boolean save(BlockMessage blockMsg, String collectionName) {
+        if (MongoUtil.findByKV("msgId", blockMsg.getMsgId(), collectionName)) {
             logger.info("blockMsg 消息 [" + blockMsg.getMsgId() + "] 已存在");
             return false;
         } else {
@@ -72,6 +75,7 @@ public class BlockMessageService {
 
     /**
      * 进行签名和验证的 content
+     *
      * @param block
      * @param timestamp
      * @param pubKey
@@ -79,11 +83,12 @@ public class BlockMessageService {
      */
     public static String getSignContent(Block block, String timestamp, String pubKey) {
         String msgType = Const.BM;
-        return block.toString() +msgType + timestamp + pubKey;
+        return block.toString() + msgType + timestamp + pubKey;
     }
 
     /**
      * 校验数字签名
+     *
      * @param blockMsg
      * @return
      */

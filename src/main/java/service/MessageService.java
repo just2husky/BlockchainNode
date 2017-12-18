@@ -47,7 +47,7 @@ public class MessageService {
      * @return
      * @throws Exception
      */
-    public static long getSeqNum(String collectionName) throws Exception {
+    public static long getSeqNum(String collectionName) {
         if (!MongoUtil.collectionExists(collectionName)) {
             logger.info("集合" + collectionName + "不存在，开始创建");
             MongoUtil.insertKV("seqNum", "0", collectionName);
@@ -64,7 +64,8 @@ public class MessageService {
                 return seqNum;
 
             } else {
-                throw new Exception("获取 seqNum 失败！");
+                logger.error("获取 seqNum 失败！");
+                return -1;
             }
         }
     }
@@ -75,7 +76,7 @@ public class MessageService {
      * @param collectionName
      * @throws Exception
      */
-    public static long updateSeqNum(String collectionName) throws Exception {
+    public static long updateSeqNum(String collectionName) {
 
         long oldSeqNum = getSeqNum(collectionName);
         long newSeqNum = oldSeqNum + 1;

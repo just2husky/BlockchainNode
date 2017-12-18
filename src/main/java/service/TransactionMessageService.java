@@ -1,6 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.PrePrepareMessage;
 import entity.Transaction;
 import entity.TransactionMessage;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import util.*;
 import java.io.IOException;
 import java.security.PrivateKey;
 
+import static service.MessageService.updateSeqNum;
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
 import static util.SignatureUtil.loadPvtKey;
@@ -21,17 +23,50 @@ public class TransactionMessageService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
-    public void procTxMsg(String rcvMsg, int localPort) throws Exception {
+    /**
+     * 接收到 ClientMessage 为 TransactionMessage 时进行的一系列处理
+     * @param rcvMsg
+     * @param localPort
+     * @throws Exception
+     */
+    public static void procTxMsg(String rcvMsg, int localPort) {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
-        // 1. 将从客户端收到的 Tx Message 存入到集合中
-        String txCollection = url + "." + Const.TXM;
-        if(save(rcvMsg, txCollection)) {
-            logger.info("Tx Message 存入成功");
-        } else {
-            logger.info("Tx Message 已存在");
+        TransactionMessage txMsg = null;
+        try {
+            txMsg = objectMapper.readValue(rcvMsg, TransactionMessage.class);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        // 校验 Tx Msg
+        if(txMsg != null && verify(txMsg)) {
+            // 1. 将从客户端收到的 Tx Message 存入到集合中
+            String txCollection = url + "." + Const.TXM;
+            if(save(txMsg, txCollection)) {
+                logger.info("Tx Message: " + txMsg.getMsgId() + " 存入成功");
+            } else {
+                logger.info("Tx Message: " + txMsg.getMsgId() + " 已存在");
+            }
 
+            // 2. 从集合中取出给当前 PrePrepareMessage 分配的序列号
+            long seqNum = updateSeqNum(url + ".seqNum");
+            // 3. 根据 Block Message 生成 PrePrepareMessage，存入到集合中
+            String ppmCollection = url + "." + Const.PPM;
+
+            PrePrepareMessage ppm = PrePrepareMessageService.genInstance(Long.toString(seqNum), txMsg);
+            PrePrepareMessageService.save(ppm, ppmCollection);
+
+            // 4. 主节点向其他备份节点广播 PrePrepareMessage
+            try {
+                NetService.broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else if(txMsg != null){
+            logger.error("Tx Message: " + txMsg.getMsgId() + " 未通过校验");
+        } else {
+            logger.error("Tx Message 为空");
+        }
     }
 
     /**

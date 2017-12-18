@@ -13,13 +13,10 @@ import util.*;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
 import java.util.Map;
 
 import static service.MessageService.getSeqNum;
 import static service.MessageService.updateSeqNum;
-import static util.Const.ValidatorListFile;
-import static util.JsonUtil.getValidatorAddressList;
 
 /**
  * 用于解析 socket 中 msg 的类型，并根据不同的类型，交由不同的其他 Handler 去处理
@@ -63,6 +60,8 @@ public class Handler implements Runnable {
             else if(msgType.equals(Const.TXM)) {
                 out.writeUTF("接收到你发来的客户端 Transaction 消息，准备校验后广播预准备消息");
                 out.flush();
+                socket.close();
+                TransactionMessageService.procTxMsg(rcvMsg, localPort);
             }
             // 如果socket中接受到的消息为 PrePrepare 类型
             else if (msgType.equals(Const.PPM)) {
@@ -113,8 +112,8 @@ public class Handler implements Runnable {
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
         // 1. 将从客户端收到的 Block Message 存入到集合中
-        String blockCollection = url + "." + Const.BM;
-        if(BlockMessageService.save(rcvMsg, blockCollection)) {
+        String blockMsgCollection = url + "." + Const.BM;
+        if(BlockMessageService.save(rcvMsg, blockMsgCollection)) {
             logger.info("Block Message 存入成功");
         } else {
             logger.info("Block Message 已存在");
@@ -130,7 +129,7 @@ public class Handler implements Runnable {
         PrePrepareMessageService.save(ppm, ppmCollection);
 
         // 4. 主节点向其他备份节点广播 PrePrepareMessage
-        broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
+        NetService.broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
     }
 
     /**
@@ -167,7 +166,7 @@ public class Handler implements Runnable {
             String pmCollection = url + "." + Const.PM;
             PrepareMessageService.save(pm, pmCollection);
             logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
-            broadcastMsg(NetUtil.getRealIp(), localPort, pm.toString());
+            NetService.broadcastMsg(NetUtil.getRealIp(), localPort, pm.toString());
         }
         return verifyRes;
     }
@@ -223,7 +222,7 @@ public class Handler implements Runnable {
                     logger.info("commit message: " + cmtm.toString());
                     if(CommitMessageService.save(cmtm, cmtmCollection)) {
                         logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存入数据库");
-                        broadcastMsg(NetUtil.getRealIp(), localPort, cmtm.toString());
+                        NetService.broadcastMsg(NetUtil.getRealIp(), localPort, cmtm.toString());
                     } else {
                         logger.info("CommitMessage [" + pdm.getMsgId() + "] 已存在");
                     }
@@ -309,34 +308,6 @@ public class Handler implements Runnable {
             }
         }
 
-    }
-
-    /**
-     * 向除了 ip:localport 以外的 url 地址广播消息 msg
-     * @param ip
-     * @param localPort
-     * @param msg
-     * @throws IOException
-     */
-    private static void broadcastMsg(String ip, int localPort, String msg) throws IOException {
-        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
-        for (ValidatorAddress va : list) {
-            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
-            if (!((va.getIp().equals(ip) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
-                Socket broadcastSocket = new Socket(va.getIp(), va.getPort());
-                OutputStream outToServer = broadcastSocket.getOutputStream();
-                DataOutputStream outputStream = new DataOutputStream(outToServer);
-                logger.info("开始向 " + va.getIp() + ":" + va.getPort() + " 发送消息: " + msg);
-                outputStream.writeUTF(msg);
-
-                InputStream inFromServer = broadcastSocket.getInputStream();
-                DataInputStream inputStream = new DataInputStream(inFromServer);
-                String rcvMsg = inputStream.readUTF();
-                logger.info("服务器响应消息的结果为： " + rcvMsg);
-
-                broadcastSocket.close();
-            }
-        }
     }
 
 
