@@ -3,16 +3,15 @@ package service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
 import entity.BlockMessage;
+import entity.PrePrepareMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.Const;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
 
+import static service.MessageService.updateSeqNum;
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
 import static util.SignatureUtil.loadPvtKey;
@@ -23,6 +22,37 @@ import static util.SignatureUtil.loadPvtKey;
 public class BlockMessageService {
     private final static Logger logger = LoggerFactory.getLogger(BlockMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 处理客户端发送的消息
+     * @param rcvMsg 接收到的消息
+     * @param localPort 本机的端口
+     * @throws IOException
+     */
+    public static void procBlockMsg(String rcvMsg, int localPort) throws Exception {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+        // 1. 将从客户端收到的 Block Message 存入到集合中
+        String blockMsgCollection = url + "." + Const.BM;
+        if(BlockMessageService.save(rcvMsg, blockMsgCollection)) {
+            logger.info("Block Message 存入成功");
+        } else {
+            logger.info("Block Message 已存在");
+        }
+
+        // 2. 从集合中取出给当前 PrePrepareMessage 分配的序列号
+        long seqNum = updateSeqNum(url + ".seqNum");
+
+        // 3. 根据 Block Message 生成 PrePrepareMessage，存入到集合中
+        String ppmCollection = url + "." + Const.PPM;
+        BlockMessage blockMsg = objectMapper.readValue(rcvMsg, BlockMessage.class);
+        PrePrepareMessage ppm = PrePrepareMessageService.genInstance(Long.toString(seqNum), blockMsg);
+        PrePrepareMessageService.save(ppm, ppmCollection);
+
+        // 4. 主节点向其他备份节点广播 PrePrepareMessage
+        NetService.broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
+    }
 
     /**
      * 根据 block 对象，生成 BlockMessage 对象

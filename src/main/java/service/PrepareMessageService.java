@@ -1,12 +1,13 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.CommitMessage;
+import entity.PrePrepareMessage;
 import entity.PrepareMessage;
+import entity.PreparedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -19,6 +20,74 @@ import static util.SignatureUtil.*;
 public class PrepareMessageService {
     private final static Logger logger = LoggerFactory.getLogger(PrepareMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 处理准备消息
+     * 只要准备消息的签名是正确的，它们的视图编号等于副本的当前视图，并且它们的序列号介于 h 和 H，
+     * 副本节点（包括主节点）便接受准备消息，并将它们添加到日志中。
+     * @param rcvMsg
+     * @param localPort
+     * @return
+     */
+    public static boolean procPMsg(String rcvMsg, int localPort) throws IOException {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+
+        // 1. 校验接收到的 PrepareMessage
+        PrepareMessage pm = objectMapper.readValue(rcvMsg, PrepareMessage.class);
+        logger.info("接收到 PrepareMsg：" + rcvMsg);
+        logger.info("开始校验 PrepareMsg ...");
+        boolean verifyRes = PrepareMessageService.verify(pm);
+        logger.info("校验结束，结果为：" + verifyRes);
+
+        if(verifyRes) {
+            String pmCollection = url + "." + Const.PM;
+            String ppmCollection = url + "." + Const.PPM;
+            String cmtmCollection = url + "." + Const.CMTM;
+            // 2.  PrepareMessage 存入前检验
+            PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(pm.getPpmSign()), ppmCollection);
+
+            //  统计 ppmSign 出现的次数
+            int count = MongoUtil.countPPMSign(pm.getPpmSign(), pm.getViewId(), pm.getSeqNum(), pmCollection);
+
+            // 3. 将 PrePrepareMessage 存入到集合中
+            if(PrepareMessageService.save(pm, pmCollection)) {
+                logger.info("PrepareMessage [" + pm.getMsgId() + "] 存入数据库");
+            } else {
+                logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");
+            }
+
+            logger.info("count = " + count);
+            // 4. 达成 count >= 2 * f 后存入到集合中
+            if (2 * PeerUtil.getFaultCount() <= count) {
+                logger.info("开始生成 PreparedMessage 并存入数据库");
+                String pdmCollection = url + "." + Const.PDM;
+                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
+                        ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
+                if(PreparedMessageService.save(pdm, pdmCollection)) {
+                    logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
+                    CommitMessage cmtm = CommitMessageService.genCommitMsg(ppm.getSignature(), ppm.getViewId(),
+                            ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
+                    logger.info("commit message: " + cmtm.toString());
+                    if(CommitMessageService.save(cmtm, cmtmCollection)) {
+                        logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存入数据库");
+                        NetService.broadcastMsg(NetUtil.getRealIp(), localPort, cmtm.toString());
+                    } else {
+                        logger.info("CommitMessage [" + pdm.getMsgId() + "] 已存在");
+                    }
+                } else {
+                    logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存在");
+                }
+            } else {
+                logger.info("Prepare Message 数量不够");
+            }
+
+            // 5. 生成 commit message 存入集合中，并广播给其他节点
+
+        }
+        return true;
+    }
 
     /**
      * 根据相关字段生成 PrepareMessage

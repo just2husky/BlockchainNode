@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
+import java.io.IOException;
 import java.security.PrivateKey;
 
 import static util.SignatureUtil.*;
@@ -18,6 +17,75 @@ import static util.SignatureUtil.*;
 public class CommitMessageService {
     private final static Logger logger = LoggerFactory.getLogger(CommitMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 处理接收到的 commit message
+     * @param rcvMsg
+     * @param localPort
+     * @throws IOException
+     */
+    @SuppressWarnings("Duplicates")
+    public static void procCMTM(String rcvMsg, int localPort) throws IOException {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        logger.info("本机地址为：" + url);
+
+        // 1. 校验接收到的 CommitMessage
+        CommitMessage cmtm = objectMapper.readValue(rcvMsg, CommitMessage.class);
+        logger.info("接收到 CommitMsg：" + rcvMsg);
+        logger.info("开始校验 CommitMsg ...");
+        boolean verifyRes = CommitMessageService.verify(cmtm);
+        logger.info("校验结束，结果为：" + verifyRes);
+
+        if(verifyRes) {
+            String cmtmCollection = url + "." + Const.CMTM;
+            String cmtdmCollection = url + "." + Const.CMTDM;
+            String ppmCollection = url + "." + Const.PPM;
+            String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+            String txCollection = url + "." + Const.TX;
+
+            PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(cmtm.getPpmSign()), ppmCollection);
+            if(ppm != null) {
+                // 1. 统计 ppmSign 出现的次数
+                int count = MongoUtil.countPPMSign(cmtm.getPpmSign(), cmtm.getViewId(), cmtm.getSeqNum(), cmtmCollection);
+
+                // 2. 将 CommitMessage 存入到集合中
+                if (CommitMessageService.save(cmtm, cmtmCollection)) {
+                    logger.info("将CommitMessage [" + cmtm.getMsgId() + "] 存入数据库");
+                } else {
+                    logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存在");
+                }
+
+                logger.info("count = " + count);
+                // 3. 达成 count >= 2 * f 后存入到集合中
+                if (2 * PeerUtil.getFaultCount() <= count) {
+                    CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
+                            ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
+                    if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
+                        logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
+                        ClientMessage clientMessage = ppm.getClientMsg();
+                        if (clientMessage.getClass().getSimpleName().equals(Const.BM)) {
+                            BlockMessage blockMessage = (BlockMessage) clientMessage;
+                            Block block = blockMessage.getBlock();
+                            if(BlockService.saveBlock(block, blockChainCollection)) {
+                                logger.info("区块 " + block.getBlockId() + " 存入成功");
+                            }
+                        } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {
+                            TransactionMessage txMessage = (TransactionMessage) clientMessage;
+                            Transaction transaction = txMessage.getTransaction();
+                            if(TransactionService.save(transaction, txCollection)) {
+                                logger.info("交易" + transaction.getTxId() + " 存入成功");
+                            }
+                        }
+
+                    } else {
+                        logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
+                    }
+                }
+            }
+        }
+
+    }
 
     public static CommitMessage genCommitMsg(String ppmSign, String viewId, String seqNum, String ip, int port) {
         String timestamp = TimeUtil.getNowTimeStamp();
