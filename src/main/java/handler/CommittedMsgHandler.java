@@ -27,8 +27,7 @@ public class CommittedMsgHandler implements Runnable{
         String ppmCollection = url + "." + Const.PPM;
         String cmtmCollection = url + "." + Const.CMTM;
         String cmtdmCollection = url + "." + Const.CMTDM;
-        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
-        MessageService.traversePPMAndSaveMsg(ppmCollection, cmtmCollection, cmtdmCollection, Const.CMTDM, realIp, port,
-                blockChainCollection);
+//        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+        MessageService.traversePPMAndSaveMsg(ppmCollection, cmtmCollection, cmtdmCollection, Const.CMTDM, realIp, port);
     }
 }

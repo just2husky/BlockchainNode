@@ -1,7 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.BlockMessage;
+import entity.ClientMessage;
 import entity.PrePrepareMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,21 +45,21 @@ public class PrePrepareMessageService {
     }
 
     /**
-     * 根据 序列号 与 block 对象生成预准备消息对象
+     * 根据 序列号 与 clientMs 对象生成预准备消息对象
      * @param seqNum
-     * @param blockMsg
+     * @param clientMsg
      * @return
      */
-    public static PrePrepareMessage genInstance(String seqNum, BlockMessage blockMsg) {
+    public static PrePrepareMessage genInstance(String seqNum, ClientMessage clientMsg) {
         String timestamp = TimeUtil.getNowTimeStamp();
         // TODO
         String viewId = "1";
 
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getSignContent(blockMsg.getMsgId(), viewId, seqNum, timestamp));
+        String signature = SignatureUtil.sign(privateKey, getSignContent(clientMsg.getMsgId(), viewId, seqNum, timestamp));
         String msgId = getSha256Base64(signature);
-        return new PrePrepareMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, blockMsg);
+        return new PrePrepareMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, clientMsg);
     }
 
     /**
@@ -69,7 +69,7 @@ public class PrePrepareMessageService {
      * @return
      */
     public static boolean verify(PrePrepareMessage ppm) {
-        if (!SignatureUtil.verify(ppm.getPubKey(), getSignContent(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+        if (!SignatureUtil.verify(ppm.getPubKey(), getSignContent(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
                 ppm.getSeqNum(), ppm.getTimestamp()), ppm.getSignature())) {
             return false;
         }
@@ -78,15 +78,15 @@ public class PrePrepareMessageService {
 
     /**
      * 根据传入的内容生成 ppm 要签名的字符串
-     * @param blockMsgId
+     * @param clientMsgId
      * @param viewId
      * @param seqNum
      * @param timestamp
      * @return
      */
-    public static String getSignContent(String blockMsgId, String viewId, String seqNum, String timestamp) {
+    public static String getSignContent(String clientMsgId, String viewId, String seqNum, String timestamp) {
         StringBuilder sb = new StringBuilder();
-        sb.append(blockMsgId).append(viewId).append(seqNum).append(timestamp);
+        sb.append(clientMsgId).append(viewId).append(seqNum).append(timestamp);
         return sb.toString();
     }
 }

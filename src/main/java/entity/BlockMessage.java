@@ -10,7 +10,7 @@ import util.Const;
  * client 向 Validator 发送的消息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BlockMessage extends Message {
+public class BlockMessage extends ClientMessage {
     private Block block;
 
     public BlockMessage() {

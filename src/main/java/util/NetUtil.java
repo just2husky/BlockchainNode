@@ -1,15 +1,22 @@
 package util;
 
+import entity.ValidatorAddress;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * Created by chao on 2017/11/10.
  */
 public class NetUtil {
     private static String readIp;
+    private final static List<ValidatorAddress> validatorList = JsonUtil.getValidatorAddressList(Const.ValidatorListFile);
     static {
         String localip = null;// 本地IP，如果没有配置外网IP则返回它
         String netip = null;// 外网IP
@@ -50,4 +57,23 @@ public class NetUtil {
         return readIp;
     }
 
+    /**
+     * 以 map 的形式返回 ip 与 port
+     * @return
+     */
+    public static Map<String, String> getPrimaryNode(){
+        Map<String, String> map = new HashMap<String, String>();
+        ValidatorAddress va = validatorList.get(0);
+        map.put("ip", va.getIp());
+        map.put("port", String.valueOf(va.getPort()));
+        return map;
+    }
+
+    /**
+     * 以 *.*.*.*:**** 的形式返回主节点url
+     * @return
+     */
+    public static String getPrimaryNodUrl(){
+        return getPrimaryNode().get("ip") + ":" + getPrimaryNode().get("port");
+    }
 }

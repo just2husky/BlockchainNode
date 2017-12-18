@@ -10,7 +10,7 @@ import util.Const;
  * client 向 Validator 发送的消息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TransactionMessage extends Message {
+public class TransactionMessage extends ClientMessage {
     private Transaction transaction;
 
     public TransactionMessage() {
@@ -18,6 +18,11 @@ public class TransactionMessage extends Message {
 
     public TransactionMessage(String msgId, String timestamp, String pubKey, String signature, Transaction transaction) {
         super(msgId, Const.TXM, timestamp, pubKey, signature);
+        this.transaction = transaction;
+    }
+
+    public TransactionMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, Transaction transaction) {
+        super(msgId, msgType, timestamp, pubKey, signature);
         this.transaction = transaction;
     }
 

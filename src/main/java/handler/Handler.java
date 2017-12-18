@@ -51,7 +51,7 @@ public class Handler implements Runnable {
 
             // 如果socket中接受到的消息为 blockMsg 类型
             if (msgType.equals(Const.BM)) {
-                out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
+                out.writeUTF("接收到你发来的客户端 Block 消息，准备校验后广播预准备消息");
                 out.flush();
                 socket.close();
                 try {
@@ -60,7 +60,10 @@ public class Handler implements Runnable {
                     e.printStackTrace();
                 }
             }
-
+            else if(msgType.equals(Const.TXM)) {
+                out.writeUTF("接收到你发来的客户端 Transaction 消息，准备校验后广播预准备消息");
+                out.flush();
+            }
             // 如果socket中接受到的消息为 PrePrepare 类型
             else if (msgType.equals(Const.PPM)) {
                 out.writeUTF("接收到你发来的预准备消息，准备校验后广播准备消息");
@@ -84,7 +87,6 @@ public class Handler implements Runnable {
                 logger.info("接收到commit消息");
                 procCMTM(rcvMsg, localPort);
             }
-
             else {
                 out.writeUTF("未知的 msgType 类型");
                 out.flush();
@@ -111,8 +113,8 @@ public class Handler implements Runnable {
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
         // 1. 将从客户端收到的 Block Message 存入到集合中
-        String cmCollection = url + "." + Const.BM;
-        if(BlockMessageService.save(rcvMsg, cmCollection)) {
+        String blockCollection = url + "." + Const.BM;
+        if(BlockMessageService.save(rcvMsg, blockCollection)) {
             logger.info("Block Message 存入成功");
         } else {
             logger.info("Block Message 已存在");
@@ -212,7 +214,7 @@ public class Handler implements Runnable {
             if (2 * PeerUtil.getFaultCount() <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
-                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
                         ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                 if(PreparedMessageService.save(pdm, pdmCollection)) {
                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
@@ -246,6 +248,7 @@ public class Handler implements Runnable {
      * @param localPort
      * @throws IOException
      */
+    @SuppressWarnings("Duplicates")
     public static void procCMTM(String rcvMsg, int localPort) throws IOException {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
@@ -263,6 +266,7 @@ public class Handler implements Runnable {
             String cmtdmCollection = url + "." + Const.CMTDM;
             String ppmCollection = url + "." + Const.PPM;
             String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+            String txCollection = url + "." + Const.TX;
 
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(cmtm.getPpmSign()), ppmCollection);
             if(ppm != null) {
@@ -279,13 +283,25 @@ public class Handler implements Runnable {
                 logger.info("count = " + count);
                 // 3. 达成 count >= 2 * f 后存入到集合中
                 if (2 * PeerUtil.getFaultCount() <= count) {
-                    CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                    CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
                             ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
                     if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
                         logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
-                        if(BlockService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
-                            logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
+                        ClientMessage clientMessage = ppm.getClientMsg();
+                        if (clientMessage.getClass().getSimpleName().equals(Const.BM)) {
+                            BlockMessage blockMessage = (BlockMessage) clientMessage;
+                            Block block = blockMessage.getBlock();
+                            if(BlockService.saveBlock(block, blockChainCollection)) {
+                                logger.info("区块 " + block.getBlockId() + " 存入成功");
+                            }
+                        } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {
+                            TransactionMessage txMessage = (TransactionMessage) clientMessage;
+                            Transaction transaction = txMessage.getTransaction();
+                            if(TransactionService.save(transaction, txCollection)) {
+                                logger.info("交易" + transaction.getTxId() + " 存入成功");
+                            }
                         }
+
                     } else {
                         logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
                     }

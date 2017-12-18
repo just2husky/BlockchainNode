@@ -5,10 +5,7 @@ import entity.Transaction;
 import entity.TransactionMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.Const;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
@@ -23,6 +20,19 @@ import static util.SignatureUtil.loadPvtKey;
 public class TransactionMessageService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    public void procTxMsg(String rcvMsg, int localPort) throws Exception {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + localPort;
+        // 1. 将从客户端收到的 Tx Message 存入到集合中
+        String txCollection = url + "." + Const.TXM;
+        if(save(rcvMsg, txCollection)) {
+            logger.info("Tx Message 存入成功");
+        } else {
+            logger.info("Tx Message 已存在");
+        }
+
+    }
 
     /**
      * 根据 msgType 和 transaction 生成 message
@@ -58,14 +68,14 @@ public class TransactionMessageService {
     /**
      * 将 TransactionMessage json 字符串存入集合 collectionName 中。
      *
-     * @param cliMsgStr
+     * @param blockMsgStr
      * @param collectionName
      * @return
      */
-    public static boolean save(String cliMsgStr, String collectionName) {
+    public static boolean save(String blockMsgStr, String collectionName) {
         TransactionMessage txMsg = null;
         try {
-            txMsg = objectMapper.readValue(cliMsgStr, TransactionMessage.class);
+            txMsg = objectMapper.readValue(blockMsgStr, TransactionMessage.class);
         } catch (IOException e) {
             e.printStackTrace();
         }

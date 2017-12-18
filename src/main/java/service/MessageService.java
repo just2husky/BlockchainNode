@@ -154,8 +154,10 @@ public class MessageService {
      * @param saveCollection
      * @param msgType            要生成的 msg 的类型，Const.PDM， Const.CMTDM
      */
+    @SuppressWarnings("Duplicates")
     public static void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
-                                             String msgType, String ip, int port, String blockChainCollection) {
+                                             String msgType, String ip, int port) {
+        String url = ip + ":" + port;
         Set<String> ppmSet = new HashSet<String>();
         while (true) {
             logger.info("开始遍历" + ppmCollection);
@@ -173,13 +175,13 @@ public class MessageService {
                     int count = MongoUtil.countPPMSign(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(), traverseCollection);
 
                     logger.info(ppm.getSignature() + "在 " + traverseCollection + " 出现的次数为： " + count);
-                    if (!MongoUtil.findByKV("cliMsgId", ppm.getBlockMsg().getMsgId(), saveCollection)) {
+                    if (!MongoUtil.findByKV("cliMsgId", ppm.getClientMsg().getMsgId(), saveCollection)) {
                         if (2 * PeerUtil.getFaultCount() <= count) {
                             if (msgType.equals(Const.PDM)) {
 //                                PrepareMessage pm = (PrepareMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
 //                                        ppm.getSeqNum(), traverseCollection, msgType);
                                 logger.info("开始生成 PreparedMessage 并存入数据库");
-                                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getBlockMsg().getMsgId(), ppm.getViewId(),
+                                PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
                                         ppm.getSeqNum(), ip, port);
                                 if (PreparedMessageService.save(pdm, saveCollection)) {
                                     logger.info("PreparedMessage [" + pdm.getMsgId() + "] 已存入数据库");
@@ -188,12 +190,26 @@ public class MessageService {
 //                                CommittedMessage cmtMsg = (CommittedMessage) MongoUtil.findPM(ppm.getSignature(), ppm.getViewId(),
 //                                        ppm.getSeqNum(), traverseCollection, msgType);
                                 logger.info("开始生成 CommittedMessage 并存入数据库");
-                                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getBlockMsg().getMsgId(),
+                                CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getClientMsg().getMsgId(),
                                         ppm.getViewId(), ppm.getSeqNum(), ip, port);
                                 if (CommittedMessageService.save(cmtdm, saveCollection)) {
                                     logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存入数据库");
-                                    if (BlockService.saveBlock(ppm.getBlockMsg().getBlock(), blockChainCollection)) {
-                                        logger.info("区块 " + ppm.getBlockMsg().getBlock().getBlockId() + " 存入成功");
+//                                    if (BlockService.saveBlock(ppm.getClientMsg().getBlock(), blockChainCollection)) {
+//                                        logger.info("区块 " + ppm.getClientMsg().getBlock().getBlockId() + " 存入成功");
+//                                    }
+                                    ClientMessage clientMessage = ppm.getClientMsg();
+                                    if (clientMessage.getClass().getSimpleName().equals(Const.BM)) {
+                                        BlockMessage blockMessage = (BlockMessage) clientMessage;
+                                        Block block = blockMessage.getBlock();
+                                        if(BlockService.saveBlock(block, url + Const.BLOCK_CHAIN)) {
+                                            logger.info("区块 " + block.getBlockId() + " 存入成功");
+                                        }
+                                    } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {
+                                        TransactionMessage txMessage = (TransactionMessage) clientMessage;
+                                        Transaction transaction = txMessage.getTransaction();
+                                        if(TransactionService.save(transaction, url + Const.TX)) {
+                                            logger.info("交易" + transaction.getTxId() + " 存入成功");
+                                        }
                                     }
                                 }
                             }

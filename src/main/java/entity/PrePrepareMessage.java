@@ -12,31 +12,31 @@ import util.Const;
 public class PrePrepareMessage extends Message{
     private String viewId;  // 当前视图编号
     private String seqNum;  // sequence number， 该请求是在视图v中被赋予了序号n
-    private BlockMessage blockMsg;
+    private ClientMessage clientMsg;
 
     public PrePrepareMessage() {
     }
 
-    public PrePrepareMessage(String viewId, String seqNum, BlockMessage blockMsg) {
+    public PrePrepareMessage(String viewId, String seqNum, ClientMessage clientMsg) {
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.blockMsg = blockMsg;
+        this.clientMsg = clientMsg;
     }
 
     public PrePrepareMessage(String msgId, String timestamp, String pubKey, String signature, String viewId,
-                             String seqNum, BlockMessage blockMsg) {
+                             String seqNum, ClientMessage clientMsg) {
         super(msgId, Const.PPM, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.blockMsg = blockMsg;
+        this.clientMsg = clientMsg;
     }
 
     public PrePrepareMessage(String msgId, String msgType, String timestamp, String pubKey, String signature,
-                             String viewId, String seqNum, BlockMessage blockMsg) {
+                             String viewId, String seqNum, ClientMessage clientMsg) {
         super(msgId, msgType, timestamp, pubKey, signature);
         this.viewId = viewId;
         this.seqNum = seqNum;
-        this.blockMsg = blockMsg;
+        this.clientMsg = clientMsg;
     }
 
     @Override
@@ -66,11 +66,11 @@ public class PrePrepareMessage extends Message{
         this.seqNum = seqNum;
     }
 
-    public BlockMessage getBlockMsg() {
-        return blockMsg;
+    public ClientMessage getClientMsg() {
+        return clientMsg;
     }
 
-    public void setBlockMsg(BlockMessage blockMsg) {
-        this.blockMsg = blockMsg;
+    public void setClientMsg(ClientMessage clientMsg) {
+        this.clientMsg = clientMsg;
     }
 }
