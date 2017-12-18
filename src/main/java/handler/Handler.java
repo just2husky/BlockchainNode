@@ -162,10 +162,10 @@ public class Handler implements Runnable {
             }
 
             // 3. 生成 PrepareMessage，存入集合，并向其他节点进行广播
-            PrepareMessage pm = MessageService.genPrepareMsg(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(),
+            PrepareMessage pm = PrepareMessageService.genInstance(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(),
                     NetUtil.getRealIp(), localPort);
             String pmCollection = url + "." + Const.PM;
-            MessageService.savePMsg(pm, pmCollection);
+            PrepareMessageService.save(pm, pmCollection);
             logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存入数据库");
             broadcastMsg(NetUtil.getRealIp(), localPort, pm.toString());
         }
@@ -189,7 +189,7 @@ public class Handler implements Runnable {
         PrepareMessage pm = objectMapper.readValue(rcvMsg, PrepareMessage.class);
         logger.info("接收到 PrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrepareMsg ...");
-        boolean verifyRes = MessageService.verifyPrepareMsg(pm);
+        boolean verifyRes = PrepareMessageService.verify(pm);
         logger.info("校验结束，结果为：" + verifyRes);
 
         if(verifyRes) {
@@ -203,7 +203,7 @@ public class Handler implements Runnable {
             int count = MongoUtil.countPPMSign(pm.getPpmSign(), pm.getViewId(), pm.getSeqNum(), pmCollection);
 
             // 3. 将 PrePrepareMessage 存入到集合中
-            if(MessageService.savePMsg(pm, pmCollection)) {
+            if(PrepareMessageService.save(pm, pmCollection)) {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 存入数据库");
             } else {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");

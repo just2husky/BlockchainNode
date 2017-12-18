@@ -24,69 +24,6 @@ public class MessageService {
     private final static Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
-    public static boolean savePMsg(PrepareMessage pMsg, String collectionName) {
-        if (MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
-            logger.info("pMsg 消息 [" + pMsg.getMsgId() + "] 已存在");
-            return false;
-        } else {
-            MongoUtil.insertJson(pMsg.toString(), collectionName);
-            return true;
-        }
-    }
-
-    public static boolean savePMsg(String pMsgStr, String collectionName) {
-        PrepareMessage pMsg = null;
-        try {
-            pMsg = objectMapper.readValue(pMsgStr, PrepareMessage.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return savePMsg(pMsg, collectionName);
-    }
-
-    /**
-     * 根据传入的内容生成 pm 要签名的字符串
-     *
-     * @param ppmSign   ppm消息中的数字签名，相当于消息 m 的 digest d.
-     * @param viewId
-     * @param seqNum
-     * @param timestamp
-     * @return
-     */
-    public static String getPMSignContent(String ppmSign, String viewId, String seqNum, String timestamp, String ip, int port) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(ppmSign).append(viewId).append(seqNum).append(timestamp).append(ip).append(port);
-        return sb.toString();
-    }
-
-    /**
-     * 根据相关字段生成 PrepareMessage
-     *
-     * @param ppmSign ppm消息中的数字签名，相当于消息 m 的 digest d.
-     * @param viewId
-     * @param seqNum
-     * @param ip
-     * @param port
-     * @return
-     */
-    public static PrepareMessage genPrepareMsg(String ppmSign, String viewId, String seqNum, String ip, int port) {
-        String timestamp = TimeUtil.getNowTimeStamp();
-        PrivateKey privateKey = loadPvtKey("EC");
-        String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getPMSignContent(ppmSign, viewId, seqNum, timestamp, ip, port));
-        String msgId = getSha256Base64(signature);
-        return new PrepareMessage(msgId, timestamp, pubKey, signature, viewId, seqNum, ppmSign, ip, port);
-
-    }
-
-    public static boolean verifyPrepareMsg(PrepareMessage pm) {
-        if (!SignatureUtil.verify(pm.getPubKey(), getPMSignContent(pm.getPpmSign(), pm.getViewId(),
-                pm.getSeqNum(), pm.getTimestamp(), pm.getIp(), pm.getPort()), pm.getSignature())) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * 生成 Message 类的对象
      *
