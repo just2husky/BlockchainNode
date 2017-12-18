@@ -5,6 +5,7 @@ import entity.Block;
 import entity.BlockMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.Const;
 import util.MongoUtil;
 import util.SignatureUtil;
 import util.TimeUtil;
@@ -32,7 +33,7 @@ public class BlockMessageService {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, block.toString());
+        String signature = SignatureUtil.sign(privateKey, getSignContent(block, timestamp, pubKey));
         String msgId = getSha256Base64(signature);
         return new BlockMessage(msgId, timestamp, pubKey, signature, block);
     }
@@ -67,5 +68,27 @@ public class BlockMessageService {
             MongoUtil.insertJson(blockMsg.toString(), collectionName);
             return true;
         }
+    }
+
+    /**
+     * 进行签名和验证的 content
+     * @param block
+     * @param timestamp
+     * @param pubKey
+     * @return
+     */
+    public static String getSignContent(Block block, String timestamp, String pubKey) {
+        String msgType = Const.BM;
+        return block.toString() +msgType + timestamp + pubKey;
+    }
+
+    /**
+     * 校验数字签名
+     * @param blockMsg
+     * @return
+     */
+    public static boolean verify(BlockMessage blockMsg) {
+        return SignatureUtil.verify(blockMsg.getPubKey(), getSignContent(blockMsg.getBlock(), blockMsg.getTimestamp(),
+                blockMsg.getPubKey()), blockMsg.getSignature());
     }
 }

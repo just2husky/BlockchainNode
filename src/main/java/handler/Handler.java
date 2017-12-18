@@ -49,7 +49,7 @@ public class Handler implements Runnable {
 //            out.flush();
 //            socket.close();
 
-            // 1. 如果socket中接受到的消息为 blockMsg 类型
+            // 如果socket中接受到的消息为 blockMsg 类型
             if (msgType.equals(Const.BM)) {
                 out.writeUTF("接收到你发来的客户端消息，准备校验后广播预准备消息");
                 out.flush();
@@ -61,14 +61,14 @@ public class Handler implements Runnable {
                 }
             }
 
-            // 2. 如果socket中接受到的消息为 PrePrepare 类型
+            // 如果socket中接受到的消息为 PrePrepare 类型
             else if (msgType.equals(Const.PPM)) {
                 out.writeUTF("接收到你发来的预准备消息，准备校验后广播准备消息");
                 out.flush();
                 socket.close();
                 procPPMsg(rcvMsg, localPort);
             }
-
+            // 如果socket中接受到的消息为 Prepare 类型
             else if (msgType.equals(Const.PM)) {
                 out.writeUTF("接收到你发来的准备消息");
                 out.flush();
@@ -76,7 +76,7 @@ public class Handler implements Runnable {
                 logger.info("接收到准备消息");
                 procPMsg(rcvMsg, localPort);
             }
-
+            // 如果socket中接受到的消息为 commit 类型
             else if (msgType.equals(Const.CMTM)) {
                 out.writeUTF("接收到你发来的commit消息");
                 out.flush();

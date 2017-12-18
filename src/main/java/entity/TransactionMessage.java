@@ -3,20 +3,21 @@ package entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import util.Const;
 
 /**
  * Created by chao on 2017/11/11.
  * client 向 Validator 发送的消息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ClientMessage extends Message {
+public class TransactionMessage extends Message {
     private Transaction transaction;
 
-    public ClientMessage() {
+    public TransactionMessage() {
     }
 
-    public ClientMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, Transaction transaction) {
-        super(msgId, msgType, timestamp, pubKey, signature);
+    public TransactionMessage(String msgId, String timestamp, String pubKey, String signature, Transaction transaction) {
+        super(msgId, Const.TXM, timestamp, pubKey, signature);
         this.transaction = transaction;
     }
 

@@ -13,6 +13,7 @@ public class Const {
     public final static String CMTM = "CommitMsg";
     public final static String CMTDM = "CommittedMsg";
     public final static String BM = "BlockMsg";
+    public final static String TXM = "TransactionMsg";
 
     public final static String QUEUE_NAME = "TxQueue";
     public final static String CHAR_SET = "UTF-8";

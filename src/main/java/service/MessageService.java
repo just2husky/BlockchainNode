@@ -24,56 +24,6 @@ public class MessageService {
     private final static Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * 根据 msgType 和 transaction 生成 message
-     *
-     * @param msgType
-     * @param transaction
-     * @return
-     */
-    public static ClientMessage genTxMsg(String msgType, Transaction transaction) {
-        String timestamp = TimeUtil.getNowTimeStamp();
-        PrivateKey privateKey = loadPvtKey("EC");
-        String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, transaction.toString());
-        String msgId = getSha256Base64(signature);
-        return new ClientMessage(msgId, msgType, timestamp, pubKey, signature, transaction);
-    }
-
-    /**
-     * 将 ClientMessage 对象存入集合 collectionName 中。
-     *
-     * @param cliMsg
-     * @param collectionName
-     * @return
-     */
-    public static boolean saveCliMsg(ClientMessage cliMsg, String collectionName) {
-        if (MongoUtil.findByKV("msgId", cliMsg.getMsgId(), collectionName)) {
-            logger.info("cliMsg 消息 [" + cliMsg.getMsgId() + "] 已存在");
-            return false;
-        } else {
-            MongoUtil.insertJson(cliMsg.toString(), collectionName);
-            return true;
-        }
-    }
-
-    /**
-     * 将 ClientMessage json 字符串存入集合 collectionName 中。
-     *
-     * @param cliMsgStr
-     * @param collectionName
-     * @return
-     */
-    public static boolean saveCliMsg(String cliMsgStr, String collectionName) {
-        ClientMessage cliMsg = null;
-        try {
-            cliMsg = objectMapper.readValue(cliMsgStr, ClientMessage.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return saveCliMsg(cliMsg, collectionName);
-    }
-
     public static boolean savePMsg(PrepareMessage pMsg, String collectionName) {
         if (MongoUtil.findByKV("msgId", pMsg.getMsgId(), collectionName)) {
             logger.info("pMsg 消息 [" + pMsg.getMsgId() + "] 已存在");
@@ -82,17 +32,16 @@ public class MessageService {
             MongoUtil.insertJson(pMsg.toString(), collectionName);
             return true;
         }
-//        return false;
     }
 
     public static boolean savePMsg(String pMsgStr, String collectionName) {
-        ClientMessage cliMsg = null;
+        PrepareMessage pMsg = null;
         try {
-            cliMsg = objectMapper.readValue(pMsgStr, ClientMessage.class);
+            pMsg = objectMapper.readValue(pMsgStr, PrepareMessage.class);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return saveCliMsg(cliMsg, collectionName);
+        return savePMsg(pMsg, collectionName);
     }
 
     /**
