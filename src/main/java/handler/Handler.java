@@ -24,6 +24,7 @@ public class Handler implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(Handler.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final Socket socket;
+    private CommitMessageService cmtms = new CommitMessageService();
 
     public Handler(Socket socket) {
         this.socket = socket;
@@ -83,7 +84,7 @@ public class Handler implements Runnable {
                 out.flush();
                 socket.close();
                 logger.info("接收到commit消息");
-                CommitMessageService.procCMTM(rcvMsg, localPort);
+                cmtms.procCMTM(rcvMsg, localPort);
             }
             else {
                 out.writeUTF("未知的 msgType 类型");

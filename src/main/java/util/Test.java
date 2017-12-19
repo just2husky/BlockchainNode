@@ -19,6 +19,7 @@ public class Test {
         Transaction tx = TransactionService.genTx("test type", "test content");
         Message txMsg = TransactionMessageService.genInstance(tx);
         System.out.println(txMsg.getMsgId());
+        System.out.println("tx: " + txMsg);
 
         List<Transaction> txList = new ArrayList<Transaction>();
         txList.add(tx);
@@ -32,7 +33,7 @@ public class Test {
         System.out.println(blockMsgStr);
 
         Message msg = objectMapper.readValue(txMsgStr, Message.class);
-        System.out.println(msg);
+        System.out.println("tx: " + msg);
 
         System.out.println(txMsg.getClass().getSimpleName());
         System.out.println(blockMsg.getClass().getName());

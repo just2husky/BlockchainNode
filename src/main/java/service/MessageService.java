@@ -23,6 +23,7 @@ import static util.SignatureUtil.loadPvtKey;
 public class MessageService {
     private final static Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private TransactionService txService = new TransactionService();
 
     /**
      * 生成 Message 类的对象
@@ -93,7 +94,7 @@ public class MessageService {
      * @param msgType            要生成的 msg 的类型，Const.PDM， Const.CMTDM
      */
     @SuppressWarnings("Duplicates")
-    public static void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
+    public void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
                                              String msgType, String ip, int port) {
         String url = ip + ":" + port;
         Set<String> ppmSet = new HashSet<String>();
@@ -145,7 +146,7 @@ public class MessageService {
                                     } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {
                                         TransactionMessage txMessage = (TransactionMessage) clientMessage;
                                         Transaction transaction = txMessage.getTransaction();
-                                        if(TransactionService.save(transaction, url + Const.TX)) {
+                                        if(txService.save(transaction, url + Const.TX)) {
                                             logger.info("交易" + transaction.getTxId() + " 存入成功");
                                         }
                                     }

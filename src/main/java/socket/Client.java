@@ -11,8 +11,7 @@ import service.TransactionService;
  * Created by chao on 2017/11/25.
  */
 public class Client {
-    public static void main(String [] args)
-    {
+    public static void main(String[] args) {
         String serverName = "127.0.0.1";
         int port = 8000;
         try

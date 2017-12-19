@@ -15,6 +15,7 @@ public class CommittedMsgHandler implements Runnable{
     private int port;
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static int sleepTime = 60000;
+    private MessageService msgService = new MessageService();
 
     public CommittedMsgHandler(String realIp, int port) {
         this.realIp = realIp;
@@ -28,6 +29,6 @@ public class CommittedMsgHandler implements Runnable{
         String cmtmCollection = url + "." + Const.CMTM;
         String cmtdmCollection = url + "." + Const.CMTDM;
 //        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
-        MessageService.traversePPMAndSaveMsg(ppmCollection, cmtmCollection, cmtdmCollection, Const.CMTDM, realIp, port);
+        msgService.traversePPMAndSaveMsg(ppmCollection, cmtmCollection, cmtdmCollection, Const.CMTDM, realIp, port);
     }
 }

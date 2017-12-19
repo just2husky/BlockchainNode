@@ -15,6 +15,7 @@ public class PreparedMsgHandler implements Runnable{
     private int port;
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static int sleepTime = 60000;
+    private MessageService msgService = new MessageService();
 
     public PreparedMsgHandler(String realIp, int port) {
         this.realIp = realIp;
@@ -27,6 +28,6 @@ public class PreparedMsgHandler implements Runnable{
         String ppmCollection = url + "." + Const.PPM;
         String pmCollection = url + "." + Const.PM;
         String pdmCollection = url + "." + Const.PDM;
-        MessageService.traversePPMAndSaveMsg(ppmCollection, pmCollection, pdmCollection, Const.PDM, realIp, port);
+        msgService.traversePPMAndSaveMsg(ppmCollection, pmCollection, pdmCollection, Const.PDM, realIp, port);
     }
 }

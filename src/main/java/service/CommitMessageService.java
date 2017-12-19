@@ -17,6 +17,7 @@ import static util.SignatureUtil.*;
 public class CommitMessageService {
     private final static Logger logger = LoggerFactory.getLogger(CommitMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private TransactionService txService = new TransactionService();
 
     /**
      * 处理接收到的 commit message
@@ -25,7 +26,7 @@ public class CommitMessageService {
      * @throws IOException
      */
     @SuppressWarnings("Duplicates")
-    public static void procCMTM(String rcvMsg, int localPort) throws IOException {
+    public void procCMTM(String rcvMsg, int localPort) throws IOException {
         String realIp = NetUtil.getRealIp();
         String url = realIp + ":" + localPort;
         logger.info("本机地址为：" + url);
@@ -64,18 +65,20 @@ public class CommitMessageService {
                     if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
                         logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
                         ClientMessage clientMessage = ppm.getClientMsg();
-                        if (clientMessage.getClass().getSimpleName().equals(Const.BM)) {
+                        if (clientMessage.getClass().getSimpleName().equals(BlockMessage.class.getSimpleName())) {
                             BlockMessage blockMessage = (BlockMessage) clientMessage;
                             Block block = blockMessage.getBlock();
                             if(BlockService.saveBlock(block, blockChainCollection)) {
                                 logger.info("区块 " + block.getBlockId() + " 存入成功");
                             }
-                        } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {
+                        } else if (clientMessage.getClass().getSimpleName().equals(TransactionMessage.class.getSimpleName())) {
                             TransactionMessage txMessage = (TransactionMessage) clientMessage;
                             Transaction transaction = txMessage.getTransaction();
-                            if(TransactionService.save(transaction, txCollection)) {
+                            if(txService.save(transaction, txCollection)) {
                                 logger.info("交易" + transaction.getTxId() + " 存入成功");
                             }
+                        } else {
+                            logger.error("clientMessage的类型为：" + clientMessage.getClass().getSimpleName());
                         }
 
                     } else {

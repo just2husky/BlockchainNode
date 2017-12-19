@@ -28,6 +28,7 @@ public class RunUtil {
         String cmtmCollection;
         String cmtdmCollection;
         String blockChainCollection;
+        String txCollection;
 
         for (int port = 8000; port < 8004; port ++) {
             url = realIp + ":" + port;
@@ -37,6 +38,7 @@ public class RunUtil {
             cmtmCollection = url + "." + Const.CMTM;
             cmtdmCollection = url + "." + Const.CMTDM;
             blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+            txCollection = url + "." + Const.TX;
 
             long ppmCount = MongoUtil.countRecords(ppmCollection);
             long pmCount = MongoUtil.countRecords(pmCollection);
@@ -44,6 +46,7 @@ public class RunUtil {
             long cmtmCount = MongoUtil.countRecords(cmtmCollection);
             long cmtdmCount = MongoUtil.countRecords(cmtdmCollection);
             long blockChainCount = MongoUtil.countRecords(blockChainCollection);
+            long txCount = MongoUtil.countRecords(txCollection);
             int blockIdCount = MongoUtil.countValuesByKey("blockId", blockChainCollection);
 
             System.out.println("主机 [ " + url + " ] < ppmCount: " + ppmCount
@@ -52,6 +55,7 @@ public class RunUtil {
                     + ", cmtmCount: " + cmtmCount
                     + ", cmtdmCount: " + cmtdmCount
                     + ", blockChainCount: " + blockChainCount
+                    + ", txCount: " + txCount
                     + ", blockIdCount: " + blockIdCount);
         }
     }

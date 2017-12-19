@@ -39,7 +39,7 @@ public class PrepareMessageService {
         logger.info("接收到 PrepareMsg：" + rcvMsg);
         logger.info("开始校验 PrepareMsg ...");
         boolean verifyRes = PrepareMessageService.verify(pm);
-        logger.info("校验结束，结果为：" + verifyRes);
+        logger.info("校验 PrepareMsg 结果为：" + verifyRes);
 
         if(verifyRes) {
             String pmCollection = url + "." + Const.PM;
@@ -48,9 +48,6 @@ public class PrepareMessageService {
             // 2.  PrepareMessage 存入前检验
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(pm.getPpmSign()), ppmCollection);
 
-            //  统计 ppmSign 出现的次数
-            int count = MongoUtil.countPPMSign(pm.getPpmSign(), pm.getViewId(), pm.getSeqNum(), pmCollection);
-
             // 3. 将 PrePrepareMessage 存入到集合中
             if(PrepareMessageService.save(pm, pmCollection)) {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 存入数据库");
@@ -58,9 +55,11 @@ public class PrepareMessageService {
                 logger.info("PrepareMessage [" + pm.getMsgId() + "] 已存在");
             }
 
+            //  统计 ppmSign 出现的次数
+            int count = MongoUtil.countPPMSign(pm.getPpmSign(), pm.getViewId(), pm.getSeqNum(), pmCollection);
             logger.info("count = " + count);
             // 4. 达成 count >= 2 * f 后存入到集合中
-            if (2 * PeerUtil.getFaultCount() <= count) {
+            if (2 * PeerUtil.getFaultCount() + 1 <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");
                 String pdmCollection = url + "." + Const.PDM;
                 PreparedMessage pdm = PreparedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),

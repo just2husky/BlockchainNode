@@ -34,6 +34,15 @@ public class MongoUtil {
     }
 
     /**
+     * 获取集合
+     * @param collectionName
+     * @return
+     */
+    public static MongoCollection<Document> getCollection(String collectionName) {
+        return mongoDatabase.getCollection(collectionName);
+    }
+
+    /**
      * 将 json 数据插入到名字为 collectionName 的 collection（表） 中
      *
      * @param jsonStr
@@ -231,11 +240,11 @@ public class MongoUtil {
      * @param ppmSign
      * @param viewId
      * @param seqNum
-     * @param pmCollection
+     * @param collectionName
      * @return
      */
-    public static int countPPMSign(String ppmSign, String viewId, String seqNum, String pmCollection) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection(pmCollection);
+    public static int countPPMSign(String ppmSign, String viewId, String seqNum, String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         Iterator it = collection.find(eq("ppmSign", ppmSign)).iterator();
         int count = 0;
         while (it.hasNext()) {
@@ -243,15 +252,26 @@ public class MongoUtil {
             Document document = (Document) it.next();
             String pmStr = document.toJson();
             logger.debug("pmStr: " + pmStr);
-            PrepareMessage pm = null;
+            Message msg = null;
             try {
-                pm = objectMapper.readValue(pmStr, PrepareMessage.class);
+                msg = objectMapper.readValue(pmStr, Message.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
-                count++;
+            if(msg != null && msg.getClass().getSimpleName().equals("PrepareMessage")) {
+                PrepareMessage pm = (PrepareMessage) msg;
+                if (pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
+                    count++;
+                }
+            } else if(msg != null && msg.getClass().getSimpleName().equals("CommitMessage")) {
+                CommitMessage cm = (CommitMessage) msg;
+                if (cm.getViewId().equals(viewId) && cm.getSeqNum().equals(seqNum)) {
+                    count++;
+                }
+            } else {
+                logger.info("message 类型不为 PrepareMessage 或 CommitMessage");
             }
+
         }
         return count;
     }

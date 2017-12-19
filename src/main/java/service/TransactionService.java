@@ -2,12 +2,11 @@ package service;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.Block;
+import dao.TransactionDao;
 import entity.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.JsonUtil;
-import util.MongoUtil;
 import util.SignatureUtil;
 
 import java.io.IOException;
@@ -27,6 +26,7 @@ import static util.TimeUtil.getNowTimeStamp;
 public class TransactionService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private TransactionDao txDao = new TransactionDao();
     /**
      * 根据 Transaction 的类型，和要存储在 Transaction 中的 content 来生成一个 Transaction 对象
      * @param txType
@@ -101,9 +101,8 @@ public class TransactionService {
      * @param  txCollection
      * @return
      */
-    public static boolean save(Transaction tx, String txCollection) {
-        // TODO
-        return true;
+    public boolean save(Transaction tx, String txCollection) {
+        return txDao.upSert(tx, txCollection);
     }
 
     public static void main(String[] args) throws Exception {

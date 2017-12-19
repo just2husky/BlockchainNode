@@ -1,13 +1,27 @@
 package entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import util.Const;
 
 /**
  * Created by chao on 2017/11/11.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "msgType")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = PrePrepareMessage.class, name = Const.PPM),
+        @JsonSubTypes.Type(value = PrepareMessage.class, name = Const.PM),
+        @JsonSubTypes.Type(value = PreparedMessage.class, name = Const.PDM),
+        @JsonSubTypes.Type(value = CommitMessage.class, name = Const.CMTM),
+        @JsonSubTypes.Type(value = CommittedMessage.class, name = Const.CMTDM),
+        @JsonSubTypes.Type(value = ClientMessage.class, name = Const.CM)})
 public class Message {
     private String msgId;
     private String msgType;
