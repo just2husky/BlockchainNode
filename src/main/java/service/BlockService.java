@@ -2,6 +2,7 @@ package service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dao.BlockDao;
 import entity.Block;
 import entity.Transaction;
 import org.slf4j.Logger;
@@ -22,6 +23,16 @@ import static util.SignatureUtil.loadPvtKey;
 public class BlockService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static Logger logger = LoggerFactory.getLogger(BlockService.class);
+    private BlockDao blockDao = BlockDao.getInstance();
+
+    private static class LazyHolder {
+        private static final BlockService INSTANCE = new BlockService();
+    }
+    private BlockService (){}
+    public static BlockService getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     /**
      * 根据如下参数算出当前区块的id，并构造Block对象
      *
@@ -99,10 +110,10 @@ public class BlockService {
      * @param blockChainCollection
      * @return
      */
-    public static boolean saveBlock(Block block, String blockChainCollection) {
+    public boolean save(Block block, String blockChainCollection) {
         String blockId = block.getBlockId();
         logger.info("开始保存区块：" + blockId);
-        return MongoUtil.upSertBlock(block, blockChainCollection);
+        return blockDao.upSert(block, blockChainCollection);
 //        return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);
     }
 

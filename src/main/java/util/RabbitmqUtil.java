@@ -144,11 +144,11 @@ public class RabbitmqUtil {
                     }
                 }
                 else {
-                    logger.info("队列为空");
+                    logger.debug("队列为空");
                     break;
                 }
             }
-            logger.info("接收结束");
+            logger.debug("接收结束");
             channel.close();
             conn.close();
         } catch (TimeoutException e) {

@@ -24,6 +24,7 @@ public class MessageService {
     private final static Logger logger = LoggerFactory.getLogger(MessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TransactionService txService = new TransactionService();
+    private BlockService blockService = BlockService.getInstance();
 
     /**
      * 生成 Message 类的对象
@@ -140,7 +141,7 @@ public class MessageService {
                                     if (clientMessage.getClass().getSimpleName().equals(Const.BM)) {
                                         BlockMessage blockMessage = (BlockMessage) clientMessage;
                                         Block block = blockMessage.getBlock();
-                                        if(BlockService.saveBlock(block, url + Const.BLOCK_CHAIN)) {
+                                        if(blockService.save(block, url + Const.BLOCK_CHAIN)) {
                                             logger.info("区块 " + block.getBlockId() + " 存入成功");
                                         }
                                     } else if (clientMessage.getClass().getSimpleName().equals(Const.TXM)) {

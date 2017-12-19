@@ -18,6 +18,7 @@ public class CommitMessageService {
     private final static Logger logger = LoggerFactory.getLogger(CommitMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TransactionService txService = new TransactionService();
+    private BlockService blockService = BlockService.getInstance();
 
     /**
      * 处理接收到的 commit message
@@ -68,7 +69,7 @@ public class CommitMessageService {
                         if (clientMessage.getClass().getSimpleName().equals(BlockMessage.class.getSimpleName())) {
                             BlockMessage blockMessage = (BlockMessage) clientMessage;
                             Block block = blockMessage.getBlock();
-                            if(BlockService.saveBlock(block, blockChainCollection)) {
+                            if(blockService.save(block, blockChainCollection)) {
                                 logger.info("区块 " + block.getBlockId() + " 存入成功");
                             }
                         } else if (clientMessage.getClass().getSimpleName().equals(TransactionMessage.class.getSimpleName())) {

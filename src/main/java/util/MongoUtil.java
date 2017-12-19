@@ -25,11 +25,10 @@ import static com.mongodb.client.model.Filters.eq;
 public class MongoUtil {
     private final static Logger logger = LoggerFactory.getLogger(MongoUtil.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
-    private static MongoClient mongoClient;
+    private static MongoClient mongoClient = new MongoClient("localhost", 27017);
     private static MongoDatabase mongoDatabase;
 
     static {
-        mongoClient = new MongoClient("localhost", 27017);
         mongoDatabase = mongoClient.getDatabase("mycol");
     }
 
@@ -65,22 +64,6 @@ public class MongoUtil {
         Document document = Document.parse(jsonStr);
         Bson filter = Filters.eq(key, value);
         Bson update =  new Document("$set", document);
-        UpdateOptions options = new UpdateOptions().upsert(true);
-        UpdateResult updateResult = collection.updateOne(filter, update, options);
-        return updateResult.wasAcknowledged();
-    }
-
-    public static boolean upSertBlock(Block block, String collectionName) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
-        // 如果集合不存在，则创建唯一索引
-        if(!MongoUtil.collectionExists(collectionName)) {
-            Document index = new Document("blockId", 0);
-            collection.createIndex(index, new IndexOptions().unique(true));
-        }
-
-        Document document = Document.parse(block.toString());
-        Bson filter = Filters.eq("blockId", block.getBlockId());
-        Bson update = new Document("$set", document);
         UpdateOptions options = new UpdateOptions().upsert(true);
         UpdateResult updateResult = collection.updateOne(filter, update, options);
         return updateResult.wasAcknowledged();
