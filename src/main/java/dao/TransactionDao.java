@@ -10,14 +10,13 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import service.BlockMessageService;
 import util.MongoUtil;
 
 /**
  * Created by chao on 2017/12/19.
  */
 public class TransactionDao {
-    private final static Logger logger = LoggerFactory.getLogger(BlockMessageService.class);
+    private final static Logger logger = LoggerFactory.getLogger(TransactionDao.class);
 
     /**
      * 向数据库插入 tx

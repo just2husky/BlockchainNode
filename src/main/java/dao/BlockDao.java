@@ -10,14 +10,13 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import service.BlockMessageService;
 import util.MongoUtil;
 
 /**
  * Created by chao on 2017/12/19.
  */
 public class BlockDao {
-    private final static Logger logger = LoggerFactory.getLogger(BlockMessageService.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockDao.class);
 
     private static class LazyHolder {
         private static final BlockDao INSTANCE = new BlockDao();
