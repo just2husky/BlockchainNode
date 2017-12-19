@@ -19,7 +19,7 @@ import static util.JsonUtil.getValidatorAddressList;
  */
 public class ServerFrontEnd {
 
-    private final static Logger logger = LoggerFactory.getLogger(Handler.class);
+    private final static Logger logger = LoggerFactory.getLogger(ServerFrontEnd.class);
 
     /**
      * 根据 validatorAddressList 启动对应端口的 Validator

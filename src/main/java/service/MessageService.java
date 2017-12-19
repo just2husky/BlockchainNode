@@ -100,7 +100,7 @@ public class MessageService {
         String url = ip + ":" + port;
         Set<String> ppmSet = new HashSet<String>();
         while (true) {
-            logger.info("开始遍历" + ppmCollection);
+            logger.debug("开始遍历" + ppmCollection);
             ppmSet = MongoUtil.traverse(ppmCollection);
             for (String ppmStr : ppmSet) {
                 PrePrepareMessage ppm = null;
@@ -110,11 +110,11 @@ public class MessageService {
                     e.printStackTrace();
                 }
                 if (ppm != null) {
-                    logger.info("开始统计 " + ppm.getSignature() + "在 " + traverseCollection + " 出现的次数");
+                    logger.debug("开始统计 " + ppm.getSignature() + "在 " + traverseCollection + " 出现的次数");
                     // 1. 统计 ppmSign 出现的次数
                     int count = MongoUtil.countPPMSign(ppm.getSignature(), ppm.getViewId(), ppm.getSeqNum(), traverseCollection);
 
-                    logger.info(ppm.getSignature() + "在 " + traverseCollection + " 出现的次数为： " + count);
+                    logger.debug(ppm.getSignature() + "在 " + traverseCollection + " 出现的次数为： " + count);
                     if (!MongoUtil.findByKV("cliMsgId", ppm.getClientMsg().getMsgId(), saveCollection)) {
                         if (2 * PeerUtil.getFaultCount() <= count) {
                             if (msgType.equals(Const.PDM)) {
@@ -155,7 +155,7 @@ public class MessageService {
                             }
                         }
                     } else {
-                        logger.info(msgType + "已存在，不需要存入");
+                        logger.debug(msgType + "已存在，不需要存入");
                     }
                 }
             }
