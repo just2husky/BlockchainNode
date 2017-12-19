@@ -57,7 +57,7 @@ public class PrepareMessageService {
 
             //  统计 ppmSign 出现的次数
             int count = MongoUtil.countPPMSign(pm.getPpmSign(), pm.getViewId(), pm.getSeqNum(), pmCollection);
-            logger.info("count = " + count);
+            logger.debug("count = " + count);
             // 4. 达成 count >= 2 * f 后存入到集合中
             if (2 * PeerUtil.getFaultCount() + 1 <= count) {
                 logger.info("开始生成 PreparedMessage 并存入数据库");

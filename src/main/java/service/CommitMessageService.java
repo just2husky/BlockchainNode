@@ -19,6 +19,7 @@ public class CommitMessageService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
+    private CommittedMessageService cmtdmService = CommittedMessageService.getInstance();
 
     /**
      * 处理接收到的 commit message
@@ -41,15 +42,13 @@ public class CommitMessageService {
 
         if(verifyRes) {
             String cmtmCollection = url + "." + Const.CMTM;
-            String cmtdmCollection = url + "." + Const.CMTDM;
             String ppmCollection = url + "." + Const.PPM;
-            String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
-            String txCollection = url + "." + Const.TX;
 
             PrePrepareMessage ppm = MongoUtil.findPPMById(SignatureUtil.getSha256Base64(cmtm.getPpmSign()), ppmCollection);
             if(ppm != null) {
                 // 1. 统计 ppmSign 出现的次数
                 int count = MongoUtil.countPPMSign(cmtm.getPpmSign(), cmtm.getViewId(), cmtm.getSeqNum(), cmtmCollection);
+                logger.debug("count = " + count);
 
                 // 2. 将 CommitMessage 存入到集合中
                 if (CommitMessageService.save(cmtm, cmtmCollection)) {
@@ -58,33 +57,12 @@ public class CommitMessageService {
                     logger.info("CommitMessage [" + cmtm.getMsgId() + "] 已存在");
                 }
 
-                logger.info("count = " + count);
                 // 3. 达成 count >= 2 * f 后存入到集合中
                 if (2 * PeerUtil.getFaultCount() <= count) {
-                    CommittedMessage cmtdm = CommittedMessageService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
+                    CommittedMessage cmtdm = cmtdmService.genInstance(ppm.getClientMsg().getMsgId(), ppm.getViewId(),
                             ppm.getSeqNum(), NetUtil.getRealIp(), localPort);
-                    if (CommittedMessageService.save(cmtdm, cmtdmCollection)) {
-                        logger.info("将 CommittedMessage [" + cmtdm.toString() + "] 存入数据库");
-                        ClientMessage clientMessage = ppm.getClientMsg();
-                        if (clientMessage.getClass().getSimpleName().equals(BlockMessage.class.getSimpleName())) {
-                            BlockMessage blockMessage = (BlockMessage) clientMessage;
-                            Block block = blockMessage.getBlock();
-                            if(blockService.save(block, blockChainCollection)) {
-                                logger.info("区块 " + block.getBlockId() + " 存入成功");
-                            }
-                        } else if (clientMessage.getClass().getSimpleName().equals(TransactionMessage.class.getSimpleName())) {
-                            TransactionMessage txMessage = (TransactionMessage) clientMessage;
-                            Transaction transaction = txMessage.getTransaction();
-                            if(txService.save(transaction, txCollection)) {
-                                logger.info("交易" + transaction.getTxId() + " 存入成功");
-                            }
-                        } else {
-                            logger.error("clientMessage的类型为：" + clientMessage.getClass().getSimpleName());
-                        }
-
-                    } else {
-                        logger.info("CommittedMessage [" + cmtdm.getMsgId() + "] 已存在");
-                    }
+                    ClientMessage clientMessage = ppm.getClientMsg();
+                    cmtdmService.procCMTDM(cmtdm, clientMessage, localPort);
                 }
             }
         }

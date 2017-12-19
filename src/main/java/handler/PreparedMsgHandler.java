@@ -1,6 +1,5 @@
 package handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.MessageService;
@@ -13,8 +12,6 @@ public class PreparedMsgHandler implements Runnable{
     private final static Logger logger = LoggerFactory.getLogger(PreparedMsgHandler.class);
     private String realIp;
     private int port;
-    private final static ObjectMapper objectMapper = new ObjectMapper();
-    private final static int sleepTime = 60000;
     private MessageService msgService = new MessageService();
 
     public PreparedMsgHandler(String realIp, int port) {

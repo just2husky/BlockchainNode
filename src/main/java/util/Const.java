@@ -23,5 +23,5 @@ public class Const {
     public final static String BLOCK_CHAIN = "BlockChain";
     public final static String TX = "Transaction";
 
-    public final static long SLEEP_TIME = 60000;
+    public final static long SLEEP_TIME = 10000;
 }
