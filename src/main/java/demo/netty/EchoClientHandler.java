@@ -31,7 +31,7 @@ public class EchoClientHandler extends SimpleChannelInboundHandler<Object> {
         UserInfo userInfo = new UserInfo("chao", 123);
         double limitTime = 10000; // 单位毫秒
         double limitSize = 1.0 / 1024; // 单位 MB
-        Block block = BlockService.genBlock("0", Const.QUEUE_NAME, limitTime, limitSize);
+        Block block = BlockService.genBlock("0", Const.TX_QUEUE, limitTime, limitSize);
 //        List<Transaction> txList = new ArrayList<Transaction>();
 //        txList.add(TransactionService.genTx("test","test"));
 //        Block block = BlockService.genBlock("0", txList);

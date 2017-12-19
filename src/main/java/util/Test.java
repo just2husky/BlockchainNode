@@ -16,8 +16,9 @@ import java.util.List;
 public class Test {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     public static void main(String[] args) throws Exception {
+        TransactionMessageService txMsgService = TransactionMessageService.getInstance();
         Transaction tx = TransactionService.genTx("test type", "test content");
-        Message txMsg = TransactionMessageService.genInstance(tx);
+        Message txMsg = txMsgService.genInstance(tx);
         System.out.println(txMsg.getMsgId());
         System.out.println("tx: " + txMsg);
 

@@ -23,11 +23,18 @@ public class TransactionMessageService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
+    private static class LazyHolder {
+        private static final TransactionMessageService INSTANCE = new TransactionMessageService();
+    }
+    private TransactionMessageService (){}
+    public static TransactionMessageService getInstance() {
+        return TransactionMessageService.LazyHolder.INSTANCE;
+    }
+
     /**
      * 接收到 ClientMessage 为 TransactionMessage 时进行的一系列处理
      * @param rcvMsg
      * @param localPort
-     * @throws Exception
      */
     public static void procTxMsg(String rcvMsg, int localPort) {
         String realIp = NetUtil.getRealIp();
@@ -70,11 +77,11 @@ public class TransactionMessageService {
     }
 
     /**
-     * 根据 msgType 和 transaction 生成 message
+     * 根据 transaction 生成 message
      * @param transaction
      * @return
      */
-    public static TransactionMessage genInstance(Transaction transaction) {
+    public TransactionMessage genInstance(Transaction transaction) {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");

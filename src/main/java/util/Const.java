@@ -15,7 +15,9 @@ public class Const {
     public final static String BM = "BlockMsg";
     public final static String TXM = "TransactionMsg";
 
-    public final static String QUEUE_NAME = "TxQueue";
+    public final static String TX_ID_QUEUE = "TxIdQueue";
+    public final static String TX_QUEUE = "TxQueue";
+
     public final static String CHAR_SET = "UTF-8";
     public final static String HASH_ALG = "SHA-256";
     public final static String BLOCK_CHAIN = "BlockChain";

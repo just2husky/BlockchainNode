@@ -13,10 +13,11 @@ import static org.junit.Assert.*;
  */
 public class TransactionMessageServiceTest {
     private final static Logger logger = LoggerFactory.getLogger(TransactionMessageServiceTest.class);
+    private TransactionMessageService txMsgService = TransactionMessageService.getInstance();
     @Test
     public void verify() throws Exception {
         Transaction tx = TransactionService.genTx("test type", "test content");
-        TransactionMessage txMsg = TransactionMessageService.genInstance(tx);
+        TransactionMessage txMsg = txMsgService.genInstance(tx);
         boolean rlt = TransactionMessageService.verify(txMsg);
         logger.info(rlt + "");
         assertEquals(true, rlt);

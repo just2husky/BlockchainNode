@@ -20,7 +20,7 @@ public class BlockServiceTest {
 
     @Test
     public void genBlock2() throws Exception {
-        Block block = BlockService.genBlock("0", Const.QUEUE_NAME, 100000, 2.0/1024.0);
+        Block block = BlockService.genBlock("0", Const.TX_QUEUE, 100000, 2.0/1024.0);
         System.out.println(block.toString());
     }
 

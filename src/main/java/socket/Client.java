@@ -11,7 +11,9 @@ import service.TransactionService;
  * Created by chao on 2017/11/25.
  */
 public class Client {
+
     public static void main(String[] args) {
+        TransactionMessageService txMsgService = TransactionMessageService.getInstance();
         String serverName = "127.0.0.1";
         int port = 8000;
         try
@@ -22,7 +24,7 @@ public class Client {
 
             OutputStream outToServer = client.getOutputStream();
             DataOutputStream out = new DataOutputStream(outToServer);
-            String txMsg = TransactionMessageService.genInstance(TransactionService.genTx("string", "测试")).toString();
+            String txMsg = txMsgService.genInstance(TransactionService.genTx("string", "测试")).toString();
             out.writeUTF(txMsg);
 
             InputStream inFromServer = client.getInputStream();

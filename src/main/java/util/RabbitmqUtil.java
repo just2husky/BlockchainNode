@@ -40,6 +40,18 @@ public class RabbitmqUtil {
 
     public RabbitmqUtil(String queueName) {
         this.queueName = queueName;
+        try {
+            Connection conn = factory.newConnection();
+            Channel channel = conn.createChannel();
+            channel.queueDeclare(this.queueName, false, false, false, null);
+            logger.debug("创建队列：" + this.queueName);
+            channel.close();
+            conn.close();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getQueueName() {
@@ -92,15 +104,19 @@ public class RabbitmqUtil {
     /**
      * 从队列中获取一条消息
      */
-    public void pull() {
+    public String pull() {
+        String content = null;
         try {
             Connection conn = factory.newConnection();
             Channel channel = conn.createChannel();
-            GetResponse response = channel.basicGet(this.queueName, false);
-            logger.info(new String(response.getBody()));
-//            long queueLen = channel.messageCount(this.queueName);
-//            logger.info("队列长度： " + queueLen);
-            channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+            if(channel.messageCount(this.queueName) > 0) {
+                GetResponse response = channel.basicGet(this.queueName, false);
+                content = new String(response.getBody());
+                logger.debug(content);
+                channel.basicAck(response.getEnvelope().getDeliveryTag(), false);
+            } else {
+                logger.debug("队列为空");
+            }
             channel.close();
             conn.close();
         } catch (TimeoutException e) {
@@ -108,6 +124,7 @@ public class RabbitmqUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return content;
     }
 
 

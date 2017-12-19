@@ -5,25 +5,46 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.BlockMessageService;
 import service.BlockService;
+import service.NetService;
 import util.Const;
-
-import java.io.*;
-import java.net.*;
+import util.NetUtil;
 
 /**
  * Created by chao on 2017/12/10.
+ * 用于从 RabbitMQ 中获取 Transaction Id，打包成区块，发送到 Validator 主节点上
  */
-public class Blocker implements Runnable{
+public class Blocker implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(Blocker.class);
-    private long timeInterval = 5000; //生成区块并发送的频率
-    private int timeout = 5000; // Blocker 连接 Validator 的超时时间
-    String primaryValidatorIP = "127.0.0.1";
-    int primaryValidatorPort = 8000;
+    private NetService netService = NetService.getInstance();
+    private long timeInterval; //生成区块并发送的频率
+    private int timeout; // Blocker 连接 Validator 的超时时间
+    private String primaryValidatorIP;
+    private int primaryValidatorPort;
+
+    public Blocker() {
+        this.timeInterval = 1000;
+        this.timeout = 5000;
+        this.primaryValidatorIP = NetUtil.getPrimaryNode().get("ip");
+        this.primaryValidatorPort = Integer.valueOf(NetUtil.getPrimaryNode().get("port"));
+    }
+
+    public Blocker(String primaryValidatorIP, int primaryValidatorPort) {
+        this.primaryValidatorIP = primaryValidatorIP;
+        this.primaryValidatorPort = primaryValidatorPort;
+    }
+
+    public Blocker(long timeInterval, int timeout, String primaryValidatorIP, int primaryValidatorPort) {
+        this.timeInterval = timeInterval;
+        this.timeout = timeout;
+        this.primaryValidatorIP = primaryValidatorIP;
+        this.primaryValidatorPort = primaryValidatorPort;
+    }
+
     public void run() {
-        String queueName = Const.QUEUE_NAME;
+        String queueName = Const.TX_QUEUE;
         String preBlockId = "0";
         double limitTime = 10000; // 单位毫秒
-        double limitSize = 2.0/1024.0; // 单位 MB
+        double limitSize = 2.0 / 1024.0; // 单位 MB
         Block block;
         while (true) {
             block = BlockService.genBlock(preBlockId, queueName, limitTime, limitSize);
@@ -34,40 +55,18 @@ public class Blocker implements Runnable{
             }
 
             try {
-                Thread.currentThread().sleep(timeInterval);
+                Thread.sleep(timeInterval);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    @SuppressWarnings("Duplicates")
     public void sendBlock(Block block) {
         logger.info("开始发送 block: " + block.getBlockId());
-        Socket client = new Socket();
-        SocketAddress socketAddress = new InetSocketAddress(primaryValidatorIP, primaryValidatorPort);
-        try {
-            client.connect(socketAddress, timeout);
-            logger.info("连接到主机：" + primaryValidatorIP + " ，端口号：" + primaryValidatorPort);
-            logger.info("远程主机地址：" + client.getRemoteSocketAddress());
-        } catch (ConnectException e) {
-            logger.error("连接主机：" + primaryValidatorIP + " ，端口号：" + primaryValidatorPort + " 拒绝！");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try
-        {
-            OutputStream outToServer = client.getOutputStream();
-            DataOutputStream out = new DataOutputStream(outToServer);
-            out.writeUTF(BlockMessageService.genInstance(block).toString());
-
-            InputStream inFromServer = client.getInputStream();
-            DataInputStream in = new DataInputStream(inFromServer);
-            logger.info("服务器响应： " + in.readUTF());
-            client.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String rcvMsg = netService.sendMsg(BlockMessageService.genInstance(block).toString(), primaryValidatorIP,
+                primaryValidatorPort, timeout);
+        logger.info("服务器响应： " + rcvMsg);
     }
 
     public static void main(String[] args) {

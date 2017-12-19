@@ -26,7 +26,16 @@ import static util.TimeUtil.getNowTimeStamp;
 public class TransactionService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
-    private TransactionDao txDao = new TransactionDao();
+    private TransactionDao txDao = TransactionDao.getInstance();
+
+    private static class LazyHolder {
+        private static final TransactionService INSTANCE = new TransactionService();
+    }
+    private TransactionService (){}
+    public static TransactionService getInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
     /**
      * 根据 Transaction 的类型，和要存储在 Transaction 中的 content 来生成一个 Transaction 对象
      * @param txType
@@ -62,6 +71,15 @@ public class TransactionService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 从消息队列中获取 Transaction，失败则返回null
+     * @param queueName
+     * @return
+     */
+    public Transaction pullTx(String queueName) {
+        return txDao.pull(queueName);
     }
 
     /**

@@ -17,7 +17,7 @@ import static util.SignatureUtil.*;
 public class CommitMessageService {
     private final static Logger logger = LoggerFactory.getLogger(CommitMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
-    private TransactionService txService = new TransactionService();
+    private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
 
     /**

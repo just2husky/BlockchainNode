@@ -74,7 +74,7 @@ public class RunUtil {
      */
     @Test
     public void addTxToQueue() {
-        RabbitmqUtil rmq = new RabbitmqUtil(Const.QUEUE_NAME);
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_QUEUE);
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
             for (int i = 0; i < 50; i++) {
@@ -93,6 +93,19 @@ public class RunUtil {
 //        for(String msg : msgList) {
 //            System.out.println(msg);
 //        }
+    }
+
+    @Test
+    public void addTxIdToQueue() {
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_QUEUE);
+        try {
+            for (int i = 0; i < 50; i++) {
+                Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
+                rmq.push(tx.getTxId());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
