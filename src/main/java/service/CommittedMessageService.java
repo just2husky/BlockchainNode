@@ -49,22 +49,23 @@ public class CommittedMessageService {
         String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
         String txCollection = url + "." + Const.TX;
         String cmtdMsgCollection = url + "." + Const.CMTDM;
+        String cliMsgType = clientMessage.getClass().getSimpleName();
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
             logger.info("将 CommittedMessage [" + cmtdMsg.toString() + "] 存入数据库");
 
-            if (clientMessage.getClass().getSimpleName().equals(BlockMessage.class.getSimpleName())) {
+            if (cliMsgType.equals(BlockMessage.class.getSimpleName())) {
                 // 如果 clientMessage 引用的对象为 BlockMessage 类型
                 BlockMessage blockMessage = (BlockMessage) clientMessage;
                 Block block = blockMessage.getBlock();
-                if(blockService.save(block, blockChainCollection)) {
+                if (blockService.save(block, blockChainCollection)) {
                     logger.info("区块 " + block.getBlockId() + " 存入成功");
                 }
-            } else if (clientMessage.getClass().getSimpleName().equals(TransactionMessage.class.getSimpleName())) {
+            } else if (cliMsgType.equals(TransactionMessage.class.getSimpleName())) {
                 // 如果 clientMessage 引用的对象为 TransactionMessage 类型
                 TransactionMessage txMessage = (TransactionMessage) clientMessage;
                 Transaction transaction = txMessage.getTransaction();
-                if(txService.save(transaction, txCollection)) {
+                if (txService.save(transaction, txCollection)) {
                     logger.info("交易" + transaction.getTxId() + " 存入成功");
                 }
             } else {
@@ -95,7 +96,7 @@ public class CommittedMessageService {
      * @param collectionName
      * @return
      */
-    public boolean save(CommittedMessage cmtdm, String collectionName){
+    public boolean save(CommittedMessage cmtdm, String collectionName) {
         Map<String, String> map = new HashMap<String, String>();
         map.put("viewId", cmtdm.getViewId());
         map.put("seqNum", cmtdm.getSeqNum());

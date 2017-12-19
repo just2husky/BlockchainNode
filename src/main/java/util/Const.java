@@ -17,6 +17,7 @@ public class Const {
 
     public final static String TX_ID_QUEUE = "TxIdQueue";
     public final static String TX_QUEUE = "TxQueue";
+    public final static String VERIFIED_TX_QUEUE = "VerifiedTxQueue";
 
     public final static String CHAR_SET = "UTF-8";
     public final static String HASH_ALG = "SHA-256";

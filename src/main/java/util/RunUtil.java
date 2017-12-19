@@ -72,6 +72,7 @@ public class RunUtil {
     /**
      * 向队列中添加 tx
      */
+    @SuppressWarnings("Duplicates")
     @Test
     public void addTxToQueue() {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_QUEUE);
@@ -95,9 +96,24 @@ public class RunUtil {
 //        }
     }
 
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void addVerifiedTxToQueue() {
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.VERIFIED_TX_QUEUE);
+        try {
+            for (int i = 0; i < 50; i++) {
+                Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
+                rmq.push(tx.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("Duplicates")
     @Test
     public void addTxIdToQueue() {
-        RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_QUEUE);
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_ID_QUEUE);
         try {
             for (int i = 0; i < 50; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);

@@ -41,7 +41,7 @@ public class Blocker implements Runnable {
     }
 
     public void run() {
-        String queueName = Const.TX_QUEUE;
+        String queueName = Const.VERIFIED_TX_QUEUE;
         String preBlockId = "0";
         double limitTime = 10000; // 单位毫秒
         double limitSize = 2.0 / 1024.0; // 单位 MB
