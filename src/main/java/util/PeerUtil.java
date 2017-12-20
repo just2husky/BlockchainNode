@@ -10,7 +10,7 @@ import static util.JsonUtil.getValidatorAddressList;
  * Created by chao on 2017/11/30.
  */
 public class PeerUtil {
-    private static List<NetAddress> list = getValidatorAddressList(BlockChainNodesFile);
+    private static List<NetAddress> list = getValidatorAddressList(Const.BlockChainNodesFile);
     private static int peerCount = 0;
     private static int faultCount = 0;
     static {

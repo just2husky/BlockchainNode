@@ -147,7 +147,7 @@ public class JsonUtil {
 
 
     public static void main(String[] args) {
-        String jsonFile = BlockChainNodesFile;
+        String jsonFile = Const.BlockChainNodesFile;
 
         // 1. 从指定路径读取json文件，解析后返回json字符串
         logger.info(getStrByJsonFile(jsonFile));
