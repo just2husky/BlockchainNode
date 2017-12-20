@@ -29,7 +29,7 @@ public class MongoUtil {
     private static MongoDatabase mongoDatabase;
 
     static {
-        mongoDatabase = mongoClient.getDatabase("mycol");
+        mongoDatabase = mongoClient.getDatabase("BlockChain");
     }
 
     /**

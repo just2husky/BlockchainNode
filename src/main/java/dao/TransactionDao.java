@@ -71,4 +71,14 @@ public class TransactionDao {
         }
         return null;
     }
+
+    /**
+     * 将 tx push 到 消息队列 queueName 上
+     * @param tx
+     * @param queueName
+     */
+    public void push(Transaction tx, String queueName) {
+        RabbitmqUtil rmq = new RabbitmqUtil(queueName);
+        rmq.push(tx.toString());
+    }
 }

@@ -1,17 +1,16 @@
 package util;
 
-import entity.ValidatorAddress;
+import entity.NetAddress;
 
 import java.util.List;
 
-import static util.Const.ValidatorListFile;
 import static util.JsonUtil.getValidatorAddressList;
 
 /**
  * Created by chao on 2017/11/30.
  */
 public class PeerUtil {
-    private static List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
+    private static List<NetAddress> list = getValidatorAddressList(BlockChainNodesFile);
     private static int peerCount = 0;
     private static int faultCount = 0;
     static {
@@ -19,11 +18,11 @@ public class PeerUtil {
         faultCount = (peerCount - 1) / 3;
     }
 
-    public static List<ValidatorAddress> getList() {
+    public static List<NetAddress> getList() {
         return list;
     }
 
-    public static void setList(List<ValidatorAddress> list) {
+    public static void setList(List<NetAddress> list) {
         PeerUtil.list = list;
     }
 

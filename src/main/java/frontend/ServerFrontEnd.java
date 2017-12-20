@@ -1,7 +1,6 @@
 package frontend;
 
-import entity.ValidatorAddress;
-import handler.Handler;
+import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import socket.ValidatorServer;
@@ -11,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static util.Const.ValidatorListFile;
+import static util.Const.BlockChainNodesFile;
 import static util.JsonUtil.getValidatorAddressList;
 
 /**
@@ -22,16 +21,16 @@ public class ServerFrontEnd {
     private final static Logger logger = LoggerFactory.getLogger(ServerFrontEnd.class);
 
     /**
-     * 根据 validatorAddressList 启动对应端口的 Validator
-     * @param validatorAddressList validatorAddress 对象 list
+     * 根据 netAddressList 启动对应端口的 Validator
+     * @param netAddressList validatorAddress 对象 list
      */
-    public static void startValidators(List<ValidatorAddress> validatorAddressList) {
+    public static void startValidators(List<NetAddress> netAddressList) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         logger.info("当前节点可用处理器数量为：" + availableProcessors);
 
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newFixedThreadPool(availableProcessors);
-        for (ValidatorAddress va : validatorAddressList) {
+        for (NetAddress va : netAddressList) {
             try {
                 logger.info("开始启动端口为[" + va.getPort() + "]的 Validator");
                 es.execute(new ValidatorServer(va.getPort(), availableProcessors));
@@ -45,7 +44,7 @@ public class ServerFrontEnd {
 
     public static void main(String[] args) {
 
-        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
+        List<NetAddress> list = getValidatorAddressList(BlockChainNodesFile);
         logger.info("Validator 地址 list 为：" + list);
 
         startValidators(list);

@@ -82,6 +82,10 @@ public class TransactionService {
         return txDao.pull(queueName);
     }
 
+    public void pushTx(Transaction tx, String queueName) {
+        txDao.push(tx, queueName);
+    }
+
     /**
      * 解析 tx json list
      * @param txListJson

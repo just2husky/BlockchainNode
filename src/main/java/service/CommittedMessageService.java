@@ -67,6 +67,8 @@ public class CommittedMessageService {
                 Transaction transaction = txMessage.getTransaction();
                 if (txService.save(transaction, txCollection)) {
                     logger.info("交易" + transaction.getTxId() + " 存入成功");
+                    // 验证成功的 tx push 到 VERIFIED_TX_QUEUE 上供 Blocker 打包
+                    txService.pushTx(transaction, Const.VERIFIED_TX_QUEUE);
                 }
             } else {
                 logger.error("clientMessage的类型为：" + clientMessage.getClass().getSimpleName());

@@ -1,13 +1,13 @@
 package frontend;
 
-import entity.ValidatorAddress;
+import entity.NetAddress;
 import task.Task;
 
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import static util.Const.ValidatorListFile;
+import static util.Const.BlockChainNodesFile;
 import static util.JsonUtil.getValidatorAddressList;
 
 /**
@@ -17,14 +17,14 @@ import static util.JsonUtil.getValidatorAddressList;
 public class ClientFrontEnd {
 
     /**
-     * 根据 ValidatorListFile 连接验证器
+     * 根据 BlockChainNodesFile 连接验证器
      */
     public static void connValidators() {
 
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        List<ValidatorAddress> list = getValidatorAddressList(ValidatorListFile);
-        ValidatorAddress va = null;
+        List<NetAddress> list = getValidatorAddressList(BlockChainNodesFile);
+        NetAddress va = null;
         for(int index=0; index < list.size(); index++) {
             va = list.get(index);
             es.execute(new Task("task-"+index, va.getIp(), va.getPort()));

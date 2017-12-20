@@ -4,15 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.ValidatorAddress;
+import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static util.Const.ValidatorListFile;
 
 /**
  * 保存和 json 相关的操作
@@ -43,6 +45,18 @@ public class JsonUtil {
         return objList;
     }
 
+    public static Map jsonToMap(String jsonStr) {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> map = null;
+        JavaType javaType = mapper.getTypeFactory().constructParametricType(HashMap.class, String.class, Object.class);
+        try {
+            map = mapper.readValue(jsonStr, javaType);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
 
     /**
      * 从指定路径读取json文件，解析后返回json字符串
@@ -67,15 +81,33 @@ public class JsonUtil {
     }
 
     /**
-     * 从指定路径读取json文件，解析后返回对象 list
+     * 从指定路径读取json文件，解析后返回 ValidatorAddress list
      *
      * @return
      */
-    public static List<ValidatorAddress> getValidatorAddressList(String jsonFile) {
+    public static List<NetAddress> getValidatorAddressList(String jsonFile) {
         String jsonStr = getStrByJsonFile(jsonFile);
-        return str2list(jsonStr, ValidatorAddress.class);
+        Map map = jsonToMap(jsonStr);
+        //noinspection unchecked
+        List<Map> list = (List<Map>) map.get("validators");
+        List<NetAddress> addrList = new ArrayList<NetAddress>();
+        for(Map tmpMap : list) {
+            addrList.add(new NetAddress((String)tmpMap.get("ip"), (Integer) tmpMap.get("port")));
+        }
+        return addrList;
     }
 
+    /**
+     * 获取 Publisher 的地址
+     * @param jsonFile
+     * @return
+     */
+    public static NetAddress getPublisherAddress(String jsonFile) {
+        String jsonStr = getStrByJsonFile(jsonFile);
+        Map map = jsonToMap(jsonStr);
+        Map pubMap = (HashMap) map.get("publisher");
+        return new NetAddress((String)pubMap.get("ip"), (Integer) pubMap.get("port"));
+    }
     /**
      * 判断json字符串是否是一个list
      *
@@ -115,16 +147,16 @@ public class JsonUtil {
 
 
     public static void main(String[] args) {
-        String jsonFile = ValidatorListFile;
+        String jsonFile = BlockChainNodesFile;
 
         // 1. 从指定路径读取json文件，解析后返回json字符串
         logger.info(getStrByJsonFile(jsonFile));
 
         // 2.
-        List<ValidatorAddress> list = getValidatorAddressList(jsonFile);
+        List<NetAddress> list = getValidatorAddressList(jsonFile);
 
-        for (ValidatorAddress validatorAddress : list) {
-            logger.info(validatorAddress.toString());
+        for (NetAddress netAddress : list) {
+            logger.info(netAddress.toString());
         }
     }
 

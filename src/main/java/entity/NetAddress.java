@@ -3,19 +3,19 @@ package entity;
 /**
  * Created by chao on 2017/11/9.
  */
-public class ValidatorAddress {
+public class NetAddress {
     private String ip;
     private int port;
 
-    public ValidatorAddress() {
+    public NetAddress() {
     }
 
-    public ValidatorAddress(String ip, int port) {
+    public NetAddress(String ip, int port) {
         this.ip = ip;
         this.port = port;
     }
 
-    public ValidatorAddress(String ip) {
+    public NetAddress(String ip) {
         this.ip = ip;
     }
 
@@ -37,7 +37,7 @@ public class ValidatorAddress {
 
     @Override
     public String toString() {
-        return "ValidatorAddress{" +
+        return "NetAddress{" +
                 "ip='" + ip + '\'' +
                 ", port='" + port + '\'' +
                 '}';

@@ -1,8 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.Block;
-import entity.ValidatorAddress;
+import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.Const;
@@ -38,9 +37,9 @@ public class NetService {
      * @throws IOException
      */
     public static void broadcastMsg(String ip, int localPort, String msg) throws IOException {
-        List<ValidatorAddress> list = JsonUtil.getValidatorAddressList(Const.ValidatorListFile);
-        for (ValidatorAddress va : list) {
-            // 排除本机，向 ValidatorListFile 中存储的其他节点发送预准备消息
+        List<NetAddress> list = JsonUtil.getValidatorAddressList(Const.BlockChainNodesFile);
+        for (NetAddress va : list) {
+            // 排除本机，向 BlockChainNodesFile 中存储的其他节点发送预准备消息
             if (!((va.getIp().equals(ip) || va.getIp().equals("127.0.0.1")) && va.getPort() == localPort)) {
                 Socket broadcastSocket = new Socket(va.getIp(), va.getPort());
                 OutputStream outToServer = broadcastSocket.getOutputStream();

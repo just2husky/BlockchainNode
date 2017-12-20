@@ -4,8 +4,9 @@ package util;
  * Created by chao on 2017/11/9.
  */
 public class Const {
-    public final static String ValidatorListFile =
-            "src/main/resources/validator-list.json";
+    public final static String BlockChainNodesFile =
+            "src/main/resources/blockchain-nodes.json";
+
     public final static String CM = "ClientMsg";
     public final static String PPM = "PrePrepareMsg";
     public final static String PM = "PrepareMsg";
@@ -24,5 +25,7 @@ public class Const {
     public final static String BLOCK_CHAIN = "BlockChain";
     public final static String TX = "Transaction";
 
+    public final static String PRE_BLOCK_ID = "PreBlockId";
+    public final static String PRE_BLOCK_ID_COLLECTION = "PreBlockIdCollection";
     public final static long SLEEP_TIME = 10000;
 }
