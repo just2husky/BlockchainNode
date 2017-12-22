@@ -13,15 +13,19 @@ import java.net.InetSocketAddress;
 /**
  * Created by chao on 2017/12/13.
  */
-public class EchoServer {
+public class NettyServer {
     private final int port;
-
-    public EchoServer(int port) {
+    private ChannelInboundHandlerAdapter serverHandler;
+    public NettyServer(int port) {
         this.port = port;
     }
 
+    public NettyServer(int port, ChannelInboundHandlerAdapter serverHandler) {
+        this.port = port;
+        this.serverHandler = serverHandler;
+    }
+
     public void start() throws InterruptedException {
-        final EchoServerHandler serverHandler = new EchoServerHandler();
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -46,7 +50,7 @@ public class EchoServer {
                     });
             //绑定端口，并同步等待成功，sync方法返回ChannelFuture，它的功能作用类似于java.util.concurrent.Future,主要用于异步操作的通知回调。
             ChannelFuture f = b.bind().sync();
-            System.out.println(EchoServer.class.getName() +
+            System.out.println(NettyServer.class.getName() +
                     " started and listening for connections on " + f.channel().localAddress());
             //等待服务端监听端口关闭
             f.channel().closeFuture().sync();
@@ -59,6 +63,6 @@ public class EchoServer {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        new EchoServer(8000).start();
+        new NettyServer(9000, new PublisherHandler()).start();
     }
 }

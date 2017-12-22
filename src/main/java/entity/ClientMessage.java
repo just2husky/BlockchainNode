@@ -14,6 +14,7 @@ import util.Const;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = BlockMessage.class, name = Const.BM),
         @JsonSubTypes.Type(value = TransactionMessage.class, name = Const.TXM)})
+@org.msgpack.annotation.Message
 public class ClientMessage extends Message {
     public ClientMessage() {
     }
