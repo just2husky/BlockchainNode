@@ -9,9 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.*;
 
+import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
@@ -115,6 +117,56 @@ public class BlockService {
         logger.info("开始保存区块：" + blockId);
         return blockDao.upSert(block, blockChainCollection);
 //        return MongoUtil.upSertJson("blockId", block.getBlockId(), block.toString(), blockChainCollection);
+    }
+
+    /**
+     * 创建并初始化 Last Block Id
+     * @param collectionName
+     */
+    public void initLastBlockIdColl(String collectionName) {
+        if (!MongoUtil.collectionExists(collectionName)) {
+            logger.debug("集合" + collectionName + "不存在，开始创建");
+            MongoUtil.insertKV(Const.LAST_BLOCK_ID, "0", collectionName);
+        }
+    }
+
+    /**
+     * 从 collectionName 中获取 LastBlockId
+     * @param collectionName
+     * @return
+     */
+    public String getLastBlockId(String collectionName){
+        if (!MongoUtil.collectionExists(collectionName)) {
+            initLastBlockIdColl(collectionName);
+            return "0";
+        } else {
+            String record = MongoUtil.findFirstDoc(collectionName);
+            if (record != null && !record.equals("")) {
+                try {
+                    return (String) objectMapper.readValue(record, Map.class).get(Const.LAST_BLOCK_ID);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                logger.error("LastBlockId record 反序列化失败！");
+                return null;
+
+            } else {
+                logger.error("获取 LastBlockId 失败！");
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 到 collectionName 里去获取更新的LastBlockId
+     *
+     * @param collectionName
+     * @throws Exception
+     */
+    public boolean updateLastBlockId(String newLastBlockId, String collectionName) {
+
+        String oldLastBlockId = getLastBlockId(collectionName);
+        return MongoUtil.updateKV(Const.LAST_BLOCK_ID, oldLastBlockId, newLastBlockId, collectionName);
     }
 
     public static void main(String[] args) {

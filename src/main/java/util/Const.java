@@ -27,5 +27,7 @@ public class Const {
 
     public final static String PRE_BLOCK_ID = "PreBlockId";
     public final static String PRE_BLOCK_ID_COLLECTION = "PreBlockIdCollection";
+    public final static String LAST_BLOCK_ID = "LastBlockId";
+
     public final static long SLEEP_TIME = 10000;
 }

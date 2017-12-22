@@ -3,6 +3,7 @@ package util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Transaction;
 import org.junit.Test;
+import service.BlockService;
 import service.TransactionService;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class RunUtil {
     private final static ObjectMapper objMapper = new ObjectMapper();
-
+    private BlockService blockService = BlockService.getInstance();
     /**
      * 统计各个集合中记录的数量
      */
@@ -39,6 +40,7 @@ public class RunUtil {
             cmtdmCollection = url + "." + Const.CMTDM;
             blockChainCollection = url + "." + Const.BLOCK_CHAIN;
             txCollection = url + "." + Const.TX;
+            String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
 
             long ppmCount = MongoUtil.countRecords(ppmCollection);
             long pmCount = MongoUtil.countRecords(pmCollection);
@@ -48,6 +50,7 @@ public class RunUtil {
             long blockChainCount = MongoUtil.countRecords(blockChainCollection);
             long txCount = MongoUtil.countRecords(txCollection);
             int blockIdCount = MongoUtil.countValuesByKey("blockId", blockChainCollection);
+            String lastBlockId = blockService.getLastBlockId(lbiCollection);
 
             System.out.println("主机 [ " + url + " ] < ppmCount: " + ppmCount
                     + ", pmCount: " + pmCount
@@ -56,7 +59,8 @@ public class RunUtil {
                     + ", cmtdmCount: " + cmtdmCount
                     + ", blockChainCount: " + blockChainCount
                     + ", txCount: " + txCount
-                    + ", blockIdCount: " + blockIdCount);
+                    + ", blockIdCount: " + blockIdCount
+                    + ", lastBlockId: " + lastBlockId);
         }
     }
 

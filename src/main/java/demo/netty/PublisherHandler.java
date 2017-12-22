@@ -32,13 +32,14 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
         Message myMsg = objectMapper.readValue(msgStr, Message.class);
         String msgType = myMsg.getMsgType();
         logger.info("msgType: " + msgType);
+
         if (msgType.equals(Const.BM)) {
             Block block = ((BlockMessage) myMsg).getBlock();
             logger.info("服务器接收到区块: " + block.getBlockId());
             ctx.write("服务器接收到区块: " + block.getBlockId());
         } else {
-            logger.error("服务器接收到未知类型的 msg: " + msg);
-            ctx.write("未知类型的 msg:" + msg);
+            logger.error("服务器接收到尚不能处理类型的 msg: " + msg);
+            ctx.write("尚不能处理类型的 msg:" + msg);
         }
     }
 

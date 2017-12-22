@@ -107,10 +107,11 @@ public class MongoUtil {
      * @param newValue
      * @param collectionName
      */
-    public static void updateKV(String key, String oldValue, String newValue, String collectionName) {
+    public static boolean updateKV(String key, String oldValue, String newValue, String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         //更新文档   将文档中likes=100的文档修改为likes=200
-        collection.updateMany(eq(key, oldValue), new Document("$set", new Document(key, newValue)));
+        UpdateResult updateResult = collection.updateMany(eq(key, oldValue), new Document("$set", new Document(key, newValue)));
+        return updateResult.wasAcknowledged();
     }
 
     /**

@@ -49,6 +49,7 @@ public class CommittedMessageService {
         String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
         String txCollection = url + "." + Const.TX;
         String cmtdMsgCollection = url + "." + Const.CMTDM;
+        String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
         String cliMsgType = clientMessage.getClass().getSimpleName();
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
@@ -58,8 +59,17 @@ public class CommittedMessageService {
                 // 如果 clientMessage 引用的对象为 BlockMessage 类型
                 BlockMessage blockMessage = (BlockMessage) clientMessage;
                 Block block = blockMessage.getBlock();
+                String blockId = block.getBlockId();
                 if (blockService.save(block, blockChainCollection)) {
-                    logger.info("区块 " + block.getBlockId() + " 存入成功");
+                    logger.info("区块 " + blockId + " 存入成功");
+                    if(blockService.updateLastBlockId(blockId , lbiCollection)) {
+                        logger.info("Last block Id: " + blockId + " 更新成功");
+                    } else {
+                        logger.error("Last block Id: " + blockId + " 更新失败");
+                    }
+
+                } else {
+                    logger.error("区块 " + block.getBlockId() + " 存入失败");
                 }
             } else if (cliMsgType.equals(TransactionMessage.class.getSimpleName())) {
                 // 如果 clientMessage 引用的对象为 TransactionMessage 类型
