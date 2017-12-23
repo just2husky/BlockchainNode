@@ -35,7 +35,7 @@ public class LastBlockIdMessageService {
      * @param lbiCollection
      */
     public void procLastBlockIdMSg(LastBlockIdMessage lbiMsg, String lbiCollection, String lbiMsgCollection) {
-        String lastBlocId = lbiMsg.getLastBlocId();
+        String lastBlocId = lbiMsg.getLastBlockId();
         // 1. 校验接收到的 lastBlocIdMessage
         boolean verifyRes = this.verify(lbiMsg);
         logger.debug("校验结束，结果为：" + verifyRes);
@@ -55,21 +55,22 @@ public class LastBlockIdMessageService {
         }
     }
 
-    public LastBlockIdMessage genInstance(String lastBlockId) {
+    public LastBlockIdMessage genInstance(String lastBlockId, String preLastBlockId, String ip, int port) {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getSignContent(lastBlockId, timestamp));
+        String signature = SignatureUtil.sign(privateKey, getSignContent(lastBlockId, timestamp, preLastBlockId, ip, port));
         String msgId = getSha256Base64(signature);
-        return new LastBlockIdMessage(msgId, timestamp, pubKey, signature, lastBlockId);
+        return new LastBlockIdMessage(msgId, timestamp, pubKey, signature, lastBlockId, preLastBlockId, ip, port);
     }
 
-    private String getSignContent(String lastBlockId, String timestamp) {
-        return lastBlockId + timestamp;
+    private String getSignContent(String lastBlockId, String timestamp, String preLastBlockId, String ip, int port) {
+        return lastBlockId + timestamp + preLastBlockId + ip + port;
     }
 
     public boolean verify(LastBlockIdMessage lbm) {
-        return SignatureUtil.verify(lbm.getPubKey(), getSignContent(lbm.getLastBlocId(), lbm.getTimestamp()),
+        return SignatureUtil.verify(lbm.getPubKey(), getSignContent(lbm.getLastBlockId(), lbm.getTimestamp(),
+                lbm.getPreLastBlockId(), lbm.getIp(), lbm.getPort()),
                 lbm.getSignature());
     }
 

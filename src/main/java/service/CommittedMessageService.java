@@ -67,7 +67,7 @@ public class CommittedMessageService {
                     logger.info("区块 " + blockId + " 存入成功");
                     if(blockService.updateLastBlockId(blockId , lbiCollection)) {
                         logger.info("Last block Id: " + blockId + " 更新成功");
-                        LastBlockIdMessage lbMsg = lbmService.genInstance(blockId);
+                        LastBlockIdMessage lbMsg = lbmService.genInstance(blockId, block.getPreBlockId(), realIp, localPort);
                         netService.sendMsg(lbMsg.toString(), na.getIp(), na.getPort());
 //                            new NettyClient(na.getIp(), na.getPort()).start(lbMsg.toString());
                     } else {
