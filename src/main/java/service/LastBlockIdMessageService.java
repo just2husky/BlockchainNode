@@ -4,9 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.LastBlockIdMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.MongoUtil;
-import util.SignatureUtil;
-import util.TimeUtil;
+import util.*;
 
 import java.security.PrivateKey;
 
@@ -47,6 +45,8 @@ public class LastBlockIdMessageService {
             // 3. 满足条件后，更新 LastBlockIdMessage
             if(blockService.updateLastBlockId(lastBlocId, lbiCollection)) {
                 logger.info("成功更新 last block id 为：" + lastBlocId);
+                // 4. 将 last block id 推送到消息队列上
+                blockService.addLastBlockIdToQueue(lastBlocId);
             } else {
                 logger.error("更新 last block id: " + lastBlocId + "失败");
             }

@@ -18,6 +18,7 @@ public class Const {
     public final static String LBIM = "LastBlockIdMsg";
 
     public final static String TX_ID_QUEUE = "TxIdQueue";
+    public final static String LAST_BLOCK_ID_QUEUE = "LastBlockIdMsgQueue";
     public final static String TX_QUEUE = "TxQueue";
     public final static String VERIFIED_TX_QUEUE = "VerifiedTxQueue";
 

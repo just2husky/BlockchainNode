@@ -7,8 +7,10 @@ import handler.Handler;
 import handler.PreBlockIdPublisherHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.BlockService;
 import util.Const;
 import util.JsonUtil;
+import util.NetUtil;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -24,6 +26,7 @@ public class PreBlockIdPublisher implements Runnable{
     private final static Logger logger = LoggerFactory.getLogger(PreBlockIdPublisher .class);
     private final ServerSocket serverSocket;
     private final ExecutorService threadPool;
+    private BlockService blockService = BlockService.getInstance();
 
     public PreBlockIdPublisher(int port, int poolSize) throws IOException {
         this.serverSocket = new ServerSocket(port);
@@ -40,6 +43,11 @@ public class PreBlockIdPublisher implements Runnable{
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
+        String url = NetUtil.getRealIp() + ":" +serverSocket.getLocalPort();
+        String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
+        String lastBlockId = blockService.getLastBlockId(lbiCollection);
+        blockService.addLastBlockIdToQueue(lastBlockId);
+
         try {
             logger.info("启动 PreBlockPublisher 服务器");
             //noinspection InfiniteLoopStatement

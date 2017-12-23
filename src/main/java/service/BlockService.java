@@ -169,6 +169,20 @@ public class BlockService {
         return MongoUtil.updateKV(Const.LAST_BLOCK_ID, oldLastBlockId, newLastBlockId, collectionName);
     }
 
+    /**
+     * 将 last block id push到消息队列里
+     * @param lastBlockId
+     */
+    public void addLastBlockIdToQueue(String lastBlockId) {
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.LAST_BLOCK_ID_QUEUE);
+        rmq.push(lastBlockId);
+    }
+
+    public String getLastBlockIdFromQueue() {
+        RabbitmqUtil rmq = new RabbitmqUtil(Const.LAST_BLOCK_ID_QUEUE);
+        return rmq.pull();
+    }
+
     public static void main(String[] args) {
         List<Transaction> txList = new ArrayList<Transaction>();
         for (int i = 0; i < 10; i++) {
