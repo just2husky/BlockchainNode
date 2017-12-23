@@ -7,6 +7,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
@@ -14,6 +16,7 @@ import java.net.InetSocketAddress;
  * Created by chao on 2017/12/13.
  */
 public class NettyServer {
+    private final static Logger logger = LoggerFactory.getLogger(NettyServer.class);
     private final int port;
     private ChannelInboundHandlerAdapter serverHandler;
     public NettyServer(int port) {
@@ -50,8 +53,7 @@ public class NettyServer {
                     });
             //绑定端口，并同步等待成功，sync方法返回ChannelFuture，它的功能作用类似于java.util.concurrent.Future,主要用于异步操作的通知回调。
             ChannelFuture f = b.bind().sync();
-            System.out.println(NettyServer.class.getName() +
-                    " started and listening for connections on " + f.channel().localAddress());
+            logger.info("服务器 started and listening for connections on " + f.channel().localAddress());
             //等待服务端监听端口关闭
             f.channel().closeFuture().sync();
         } finally {

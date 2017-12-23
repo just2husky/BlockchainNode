@@ -1,11 +1,12 @@
 package socket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import demo.netty.NettyServer;
 import demo.netty.PublisherHandler;
+import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.Const;
+import util.JsonUtil;
 
 
 /**
@@ -14,17 +15,20 @@ import util.Const;
  */
 public class PreBlockIdPublisher implements Runnable{
     private final static Logger logger = LoggerFactory.getLogger(PreBlockIdPublisher .class);
-    private final static ObjectMapper objectMapper = new ObjectMapper();
-    private String PreBlockIdColl = Const.PRE_BLOCK_ID_COLLECTION;
 
     @Override
     public void run() {
-        NettyServer publisherServer = new NettyServer(9000, new PublisherHandler());
+        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
+        NettyServer publisherServer = new NettyServer(na.getPort(), new PublisherHandler());
         try {
             logger.info("启动 PreBlockPublisher 服务器");
             publisherServer.start();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        new Thread(new PreBlockIdPublisher()).start();
     }
 }

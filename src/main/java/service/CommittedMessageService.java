@@ -1,6 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import demo.netty.NettyClient;
 import entity.*;
 import entity.CommittedMessage;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ public class CommittedMessageService {
     private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
     private CommittedMessageService cmtdmService = CommittedMessageService.getInstance();
+    private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
 
     private static class LazyHolder {
         private static final CommittedMessageService INSTANCE = new CommittedMessageService();
@@ -51,6 +53,7 @@ public class CommittedMessageService {
         String cmtdMsgCollection = url + "." + Const.CMTDM;
         String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
         String cliMsgType = clientMessage.getClass().getSimpleName();
+        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
             logger.info("将 CommittedMessage [" + cmtdMsg.toString() + "] 存入数据库");
@@ -64,6 +67,12 @@ public class CommittedMessageService {
                     logger.info("区块 " + blockId + " 存入成功");
                     if(blockService.updateLastBlockId(blockId , lbiCollection)) {
                         logger.info("Last block Id: " + blockId + " 更新成功");
+                        LastBlockIdMessage lbMsg = lbmService.genInstance(blockId);
+                        try {
+                            new NettyClient(na.getIp(), na.getPort()).start(lbMsg.toString());
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");
                     }

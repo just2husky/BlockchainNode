@@ -15,6 +15,7 @@ public class Const {
     public final static String CMTDM = "CommittedMsg";
     public final static String BM = "BlockMsg";
     public final static String TXM = "TransactionMsg";
+    public final static String LBIM = "LastBlockIdMsg";
 
     public final static String TX_ID_QUEUE = "TxIdQueue";
     public final static String TX_QUEUE = "TxQueue";

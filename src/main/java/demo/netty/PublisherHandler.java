@@ -3,6 +3,7 @@ package demo.netty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
 import entity.BlockMessage;
+import entity.LastBlockIdMessage;
 import entity.Message;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -14,7 +15,11 @@ import org.msgpack.type.Value;
 import org.msgpack.unpacker.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.BlockService;
 import util.Const;
+import util.NetUtil;
+
+import java.net.InetSocketAddress;
 
 /**
  * Created by chao on 2017/12/13.
@@ -24,6 +29,7 @@ import util.Const;
 public class PublisherHandler extends ChannelInboundHandlerAdapter {
     private final static Logger logger = LoggerFactory.getLogger(PublisherHandler.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private BlockService blockService = BlockService.getInstance();
 
     @SuppressWarnings("Duplicates")
     @Override
@@ -32,8 +38,19 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
         Message myMsg = objectMapper.readValue(msgStr, Message.class);
         String msgType = myMsg.getMsgType();
         logger.info("msgType: " + msgType);
+        String realIp = NetUtil.getRealIp();
+        InetSocketAddress sa = (InetSocketAddress) ctx.channel().localAddress();
+        String url = realIp + ":" + sa.getPort();
+        String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
 
-        if (msgType.equals(Const.BM)) {
+        if(msgType.equals(Const.LBIM)) {
+            String lastBlocId = ((LastBlockIdMessage) myMsg).getLastBlocId();
+            if(blockService.updateLastBlockId(lastBlocId, lbiCollection)) {
+                logger.info("成功更新 last block id 为：" + lastBlocId);
+            } else {
+                logger.error("更新 last block id: " + lastBlocId + "失败");
+            }
+        } else if (msgType.equals(Const.BM)) {
             Block block = ((BlockMessage) myMsg).getBlock();
             logger.info("服务器接收到区块: " + block.getBlockId());
             ctx.write("服务器接收到区块: " + block.getBlockId());
