@@ -38,7 +38,7 @@ public class CommitMessageService {
         logger.info("接收到 CommitMsg：" + rcvMsg);
         logger.info("开始校验 CommitMsg ...");
         boolean verifyRes = CommitMessageService.verify(cmtm);
-        logger.info("校验结束，结果为：" + verifyRes);
+        logger.debug("校验结束，结果为：" + verifyRes);
 
         if(verifyRes) {
             String cmtmCollection = url + "." + Const.CMTM;

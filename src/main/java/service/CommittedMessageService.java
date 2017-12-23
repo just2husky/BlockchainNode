@@ -26,8 +26,8 @@ public class CommittedMessageService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
-    private CommittedMessageService cmtdmService = CommittedMessageService.getInstance();
     private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
+    private NetService netService = NetService.getInstance();
 
     private static class LazyHolder {
         private static final CommittedMessageService INSTANCE = new CommittedMessageService();
@@ -68,11 +68,8 @@ public class CommittedMessageService {
                     if(blockService.updateLastBlockId(blockId , lbiCollection)) {
                         logger.info("Last block Id: " + blockId + " 更新成功");
                         LastBlockIdMessage lbMsg = lbmService.genInstance(blockId);
-                        try {
-                            new NettyClient(na.getIp(), na.getPort()).start(lbMsg.toString());
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        netService.sendMsg(lbMsg.toString(), na.getIp(), na.getPort());
+//                            new NettyClient(na.getIp(), na.getPort()).start(lbMsg.toString());
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");
                     }

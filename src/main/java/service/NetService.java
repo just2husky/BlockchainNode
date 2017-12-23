@@ -24,13 +24,17 @@ public class NetService {
     private static class LazyHolder {
         private static final NetService INSTANCE = new NetService();
     }
-    private NetService (){}
+
+    private NetService() {
+    }
+
     public static NetService getInstance() {
         return LazyHolder.INSTANCE;
     }
 
     /**
      * 向除了 ip:localport 以外的 url 地址广播消息 msg
+     *
      * @param ip
      * @param localPort
      * @param msg
@@ -59,6 +63,7 @@ public class NetService {
 
     /**
      * 向指定 url 发送消息 msg
+     *
      * @param msg
      * @param ip
      * @param port
@@ -70,15 +75,18 @@ public class NetService {
         Socket client = new Socket();
         SocketAddress socketAddress = new InetSocketAddress(ip, port);
         try {
-            client.connect(socketAddress, timeout);
+            if (timeout != -1) {
+                client.connect(socketAddress, timeout);
+            } else {
+                client.connect(socketAddress);
+            }
             logger.info("连接到主机：" + ip + " ，端口号：" + port);
         } catch (ConnectException e) {
             logger.error("连接主机：" + ip + " ，端口号：" + port + " 拒绝！");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try
-        {
+        try {
             OutputStream outToServer = client.getOutputStream();
             DataOutputStream out = new DataOutputStream(outToServer);
             out.writeUTF(msg);
@@ -92,5 +100,9 @@ public class NetService {
             e.printStackTrace();
         }
         return rcvMsg;
+    }
+
+    public String sendMsg(String msg, String ip, int port) {
+        return sendMsg(msg, ip, port, -1);
     }
 }

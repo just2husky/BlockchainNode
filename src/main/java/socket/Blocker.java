@@ -1,12 +1,14 @@
 package socket;
 
 import entity.Block;
+import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.BlockMessageService;
 import service.BlockService;
 import service.NetService;
 import util.Const;
+import util.JsonUtil;
 import util.NetUtil;
 
 /**
@@ -18,26 +20,27 @@ public class Blocker implements Runnable {
     private NetService netService = NetService.getInstance();
     private long timeInterval; //生成区块并发送的频率
     private int timeout; // Blocker 连接 Validator 的超时时间
-    private String primaryValidatorIP;
-    private int primaryValidatorPort;
+    private String pbiPublisherIP;
+    private int pbiPublisherPort;
 
     public Blocker() {
         this.timeInterval = 1000;
         this.timeout = 5000;
-        this.primaryValidatorIP = NetUtil.getPrimaryNode().get("ip");
-        this.primaryValidatorPort = Integer.valueOf(NetUtil.getPrimaryNode().get("port"));
+        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
+        this.pbiPublisherIP = na.getIp();
+        this.pbiPublisherPort = na.getPort();
     }
 
-    public Blocker(String primaryValidatorIP, int primaryValidatorPort) {
-        this.primaryValidatorIP = primaryValidatorIP;
-        this.primaryValidatorPort = primaryValidatorPort;
+    public Blocker(String pbiPublisherIP, int pbiPublisherPort) {
+        this.pbiPublisherIP = pbiPublisherIP;
+        this.pbiPublisherPort = pbiPublisherPort;
     }
 
-    public Blocker(long timeInterval, int timeout, String primaryValidatorIP, int primaryValidatorPort) {
+    public Blocker(long timeInterval, int timeout, String pbiPublisherIP, int pbiPublisherPort) {
         this.timeInterval = timeInterval;
         this.timeout = timeout;
-        this.primaryValidatorIP = primaryValidatorIP;
-        this.primaryValidatorPort = primaryValidatorPort;
+        this.pbiPublisherIP = pbiPublisherIP;
+        this.pbiPublisherPort = pbiPublisherPort;
     }
 
     public void run() {
@@ -63,13 +66,14 @@ public class Blocker implements Runnable {
     }
 
     public void sendBlock(Block block) {
-        logger.info("开始发送 block: " + block.getBlockId());
-        String rcvMsg = netService.sendMsg(BlockMessageService.genInstance(block).toString(), primaryValidatorIP,
-                primaryValidatorPort, timeout);
+        logger.info("开始向 [" + pbiPublisherIP + ":" + pbiPublisherPort + "] 发送 block: " + block.getBlockId());
+        String rcvMsg = netService.sendMsg(BlockMessageService.genInstance(block).toString(), pbiPublisherIP,
+                pbiPublisherPort, timeout);
         logger.info("服务器响应： " + rcvMsg);
     }
 
     public static void main(String[] args) {
+        logger.info("启动 Blocker 服务器");
         new Thread(new Blocker()).start();
     }
 }

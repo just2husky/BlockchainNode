@@ -6,9 +6,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -61,12 +59,8 @@ public class NetUtil {
      * 以 map 的形式返回 ip 与 port
      * @return
      */
-    public static Map<String, String> getPrimaryNode(){
-        Map<String, String> map = new HashMap<String, String>();
-        NetAddress va = validatorList.get(0);
-        map.put("ip", va.getIp());
-        map.put("port", String.valueOf(va.getPort()));
-        return map;
+    public static NetAddress getPrimaryNode(){
+        return validatorList.get(0);
     }
 
     /**
@@ -74,6 +68,6 @@ public class NetUtil {
      * @return
      */
     public static String getPrimaryNodUrl(){
-        return getPrimaryNode().get("ip") + ":" + getPrimaryNode().get("port");
+        return getPrimaryNode().getIp() + ":" + getPrimaryNode().getPort();
     }
 }

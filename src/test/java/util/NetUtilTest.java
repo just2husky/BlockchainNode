@@ -1,5 +1,6 @@
 package util;
 
+import entity.NetAddress;
 import org.junit.Test;
 
 import java.util.Map;
@@ -12,9 +13,9 @@ import static org.junit.Assert.*;
 public class NetUtilTest {
     @Test
     public void getPrimaryNode() throws Exception {
-        Map<String, String> map = NetUtil.getPrimaryNode();
-        assertEquals("127.0.0.1", map.get("ip"));
-        assertEquals("8000", map.get("port"));
+        NetAddress na = NetUtil.getPrimaryNode();
+        assertEquals("127.0.0.1", na.getIp());
+        assertEquals(8000, na.getPort());
     }
 
     @Test

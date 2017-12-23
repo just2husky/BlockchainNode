@@ -16,6 +16,7 @@ import org.msgpack.unpacker.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.BlockService;
+import service.LastBlockIdMessageService;
 import util.Const;
 import util.NetUtil;
 
@@ -30,6 +31,7 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
     private final static Logger logger = LoggerFactory.getLogger(PublisherHandler.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private BlockService blockService = BlockService.getInstance();
+    private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
 
     @SuppressWarnings("Duplicates")
     @Override
@@ -42,14 +44,11 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
         InetSocketAddress sa = (InetSocketAddress) ctx.channel().localAddress();
         String url = realIp + ":" + sa.getPort();
         String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
+        String lbiMsgCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID_MSG;
 
         if(msgType.equals(Const.LBIM)) {
-            String lastBlocId = ((LastBlockIdMessage) myMsg).getLastBlocId();
-            if(blockService.updateLastBlockId(lastBlocId, lbiCollection)) {
-                logger.info("成功更新 last block id 为：" + lastBlocId);
-            } else {
-                logger.error("更新 last block id: " + lastBlocId + "失败");
-            }
+            LastBlockIdMessage lbiMsg = (LastBlockIdMessage) myMsg;
+            lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection);
         } else if (msgType.equals(Const.BM)) {
             Block block = ((BlockMessage) myMsg).getBlock();
             logger.info("服务器接收到区块: " + block.getBlockId());

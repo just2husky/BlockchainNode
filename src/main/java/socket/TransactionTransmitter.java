@@ -26,8 +26,8 @@ public class TransactionTransmitter implements Runnable {
     public TransactionTransmitter() {
         this.timeInterval = 1000;
         this.timeout = 5000;
-        this.primaryValidatorIP = NetUtil.getPrimaryNode().get("ip");
-        this.primaryValidatorPort = Integer.valueOf(NetUtil.getPrimaryNode().get("port"));
+        this.primaryValidatorIP = NetUtil.getPrimaryNode().getIp();
+        this.primaryValidatorPort = NetUtil.getPrimaryNode().getPort();
     }
 
     public TransactionTransmitter(String primaryValidatorIP, int primaryValidatorPort) {
