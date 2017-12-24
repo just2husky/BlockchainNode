@@ -43,6 +43,7 @@ public class PreBlockIdPublisherHandler implements Runnable {
             String url = realIp + ":" + socket.getLocalPort();
             String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
             String lbiMsgCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID_MSG;
+            String simpleBlockCollection = "Publisher" + url + "." + Const.SIMPLE_BLOCK;
 
             //noinspection Duplicates
             if (msgType.equals(Const.LBIM)) {
@@ -50,7 +51,7 @@ public class PreBlockIdPublisherHandler implements Runnable {
                 out.writeUTF("接收到你的 LastBlockIdMessage： " + lbiMsg.getMsgId());
                 out.flush();
                 socket.close();
-                lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection);
+                lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
 
             } else if (msgType.equals(Const.BM)) {
                 BlockMessage blockMsg = (BlockMessage) myMsg;

@@ -31,6 +31,7 @@ public class Const {
     public final static String PRE_BLOCK_ID_COLLECTION = "PreBlockIdCollection";
     public final static String LAST_BLOCK_ID = "LastBlockId";
     public final static String LAST_BLOCK_ID_MSG = "LastBlockIdMsg";
+    public final static String SIMPLE_BLOCK = "SimpleBlock";
 
     public final static long SLEEP_TIME = 10000;
 }

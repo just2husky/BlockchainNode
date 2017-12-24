@@ -44,7 +44,13 @@ public class BlockDao {
         Bson filter = Filters.eq("blockId", block.getBlockId());
         Bson update = new Document("$set", document);
         UpdateOptions options = new UpdateOptions().upsert(true);
-        UpdateResult updateResult = collection.updateOne(filter, update, options);
+        UpdateResult updateResult = null;
+        try {
+            updateResult = collection.updateOne(filter, update, options);
+        } catch (com.mongodb.MongoWriteException e) {
+            logger.error(e.getMessage());
+        }
+
         return updateResult.wasAcknowledged();
     }
 }

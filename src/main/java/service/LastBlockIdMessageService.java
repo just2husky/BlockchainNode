@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import util.*;
 
 import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import static util.SignatureUtil.getSha256Base64;
 import static util.SignatureUtil.loadPubKeyStr;
@@ -20,6 +23,7 @@ public class LastBlockIdMessageService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private BlockService blockService = BlockService.getInstance();
     private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
+    private SimpleLastBlockService slbService = SimpleLastBlockService.getInstance();
 
     private static class LazyHolder {
         private static final LastBlockIdMessageService INSTANCE = new LastBlockIdMessageService();
@@ -34,21 +38,31 @@ public class LastBlockIdMessageService {
      * @param lbiMsg
      * @param lbiCollection
      */
-    public void procLastBlockIdMSg(LastBlockIdMessage lbiMsg, String lbiCollection, String lbiMsgCollection) {
-        String lastBlocId = lbiMsg.getLastBlockId();
-        // 1. 校验接收到的 lastBlocIdMessage
+    public void procLastBlockIdMSg(LastBlockIdMessage lbiMsg, String lbiCollection, String lbiMsgCollection,
+                                   String simpleBlockCollection) {
+        String lastBlockId = lbiMsg.getLastBlockId();
+        // 1. 校验接收到的 lastBlockIdMessage
         boolean verifyRes = this.verify(lbiMsg);
         logger.debug("校验结束，结果为：" + verifyRes);
         if(verifyRes) {
             // 2. 保存接收到的 LastBlockIdMessage
             this.save(lbiMsg, lbiMsgCollection);
-            // 3. 满足条件后，更新 LastBlockIdMessage
-            if(blockService.updateLastBlockId(lastBlocId, lbiCollection)) {
-                logger.info("成功更新 last block id 为：" + lastBlocId);
-                // 4. 将 last block id 推送到消息队列上
-                blockService.addLastBlockIdToQueue(lastBlocId);
-            } else {
-                logger.error("更新 last block id: " + lastBlocId + "失败");
+            // 满足接收到 2f + 1 个来自不同节点的 lastBLockId消息
+            if(2 * PeerUtil.getFaultCount() + 1 <= this.count(lastBlockId, lbiMsgCollection)) {
+                synchronized (this) {
+                    if (!slbService.findByBlockId(lastBlockId, simpleBlockCollection)) {
+                        slbService.upSert(slbService.genInstance(lbiMsg), simpleBlockCollection);
+                        // 3. 满足条件后，更新 LastBlockIdMessage
+                        if (blockService.updateLastBlockId(lastBlockId, lbiCollection)) {
+                            logger.info("成功更新 last block id 为：" + lastBlockId);
+                            // 4. 将 last block id 推送到消息队列上
+                            blockService.addLastBlockIdToQueue(lastBlockId);
+
+                        } else {
+                            logger.error("更新 last block id: " + lastBlockId + "失败");
+                        }
+                    }
+                }
             }
         } else {
             logger.error("LastBlockIdMessage: " + lbiMsg.getMsgId() + "校验失败");
@@ -85,5 +99,21 @@ public class LastBlockIdMessageService {
 
     public void save(LastBlockIdMessage lbm, String collectionName) {
         MongoUtil.insertJson(lbm.toString(), collectionName);
+    }
+
+    /**
+     * 统计 lastBlockId 在数据库中的个数
+     * @param lastBlockId
+     * @return
+     */
+    public int count(String lastBlockId, String collectionName) {
+        List<String> list = MongoUtil.find("lastBlockId", lastBlockId, collectionName);
+        // TODO
+//        List<LastBlockIdMessage> lbiMsgList = new ArrayList<LastBlockIdMessage>();
+//        Iterator<String> it = list.iterator();
+//        while (it.hasNext()) {
+//
+//        }
+        return list.size();
     }
 }

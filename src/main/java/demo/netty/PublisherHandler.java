@@ -45,10 +45,11 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
         String url = realIp + ":" + sa.getPort();
         String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
         String lbiMsgCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID_MSG;
+        String simpleBlockCollection = "Publisher" + url + "." + Const.SIMPLE_BLOCK;
 
         if(msgType.equals(Const.LBIM)) {
             LastBlockIdMessage lbiMsg = (LastBlockIdMessage) myMsg;
-            lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection);
+            lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
         } else if (msgType.equals(Const.BM)) {
             Block block = ((BlockMessage) myMsg).getBlock();
             logger.info("服务器接收到区块: " + block.getBlockId());
