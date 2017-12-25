@@ -34,4 +34,7 @@ public class Const {
     public final static String SIMPLE_BLOCK = "SimpleBlock";
 
     public final static long SLEEP_TIME = 10000;
+
+    public final static String DESC = "descending";
+    public final static String ASC = "ascending";
 }

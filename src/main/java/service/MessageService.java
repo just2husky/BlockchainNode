@@ -8,9 +8,7 @@ import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.Thread.sleep;
 import static util.SignatureUtil.getSha256Base64;
@@ -98,7 +96,7 @@ public class MessageService {
     @SuppressWarnings("Duplicates")
     public void traversePPMAndSaveMsg(String ppmCollection, String traverseCollection, String saveCollection,
                                              String msgType, String ip, int port) {
-        Set<String> ppmSet = new HashSet<String>();
+        List<String> ppmList = new ArrayList<String>();
         while (true) {
             try {
                 sleep(Const.SLEEP_TIME);
@@ -107,8 +105,8 @@ public class MessageService {
             }
 
             logger.debug("开始遍历" + ppmCollection);
-            ppmSet = MongoUtil.traverse(ppmCollection);
-            for (String ppmStr : ppmSet) {
+            ppmList = MongoUtil.findAll(ppmCollection);
+            for (String ppmStr : ppmList) {
                 PrePrepareMessage ppm = null;
                 try {
                     ppm = objectMapper.readValue(ppmStr, PrePrepareMessage.class);

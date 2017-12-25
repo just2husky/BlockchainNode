@@ -1,6 +1,7 @@
 package util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.Block;
 import entity.Transaction;
 import org.junit.Test;
 import service.BlockService;
@@ -119,7 +120,7 @@ public class RunUtil {
     public void addTxIdToQueue() {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_ID_QUEUE);
         try {
-            for (int i = 0; i < 50; i++) {
+            for (int i = 0; i < 1000; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
                 rmq.push(tx.getTxId());
             }
@@ -137,6 +138,19 @@ public class RunUtil {
             url = realIp + ":" + port;
             blockChainCollection = url + "." + Const.BLOCK_CHAIN;
             MongoUtil.findValuesByKey("blockId", blockChainCollection);
+        }
+    }
+
+    @Test
+    public void showBlockChain() {
+        String realIp = NetUtil.getRealIp();
+        String url = realIp + ":" + 8000;
+        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+        List<Block> blockList = blockService.getAllBlocks(blockChainCollection);
+        int blockNum = 0;
+        for (Block block : blockList) {
+            System.out.println("Block" + blockNum + ": " + block.toString());
+            blockNum++;
         }
     }
 

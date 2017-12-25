@@ -110,7 +110,7 @@ public class MongoUtilTest {
 
     @Test
     public void traverse() throws Exception {
-        MongoUtil.traverse("192.168.43.153:8000.ClientMsg");
+        MongoUtil.findAll("192.168.43.153:8000.ClientMsg");
     }
 
     @Test

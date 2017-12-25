@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Sorts.ascending;
+import static com.mongodb.client.model.Sorts.descending;
 
 /**
  * Created by chao on 2017/11/27.
@@ -146,11 +148,11 @@ public class MongoUtil {
     }
 
     /**
-     * 根据 collectionName 遍历 collection
+     * 获取集合 collectionName 中所有的数据
      *
      * @param collectionName
      */
-    public static Set<String> traverse(String collectionName) {
+    public static List<String> findAll(String collectionName) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         //检索所有文档
         /**
@@ -160,14 +162,33 @@ public class MongoUtil {
          * */
         FindIterable<Document> findIterable = collection.find();
         MongoCursor<Document> mongoCursor = findIterable.iterator();
-        Set<String> set = new HashSet<String>();
+        List<String> list = new ArrayList<String>();
         String record;
         while (mongoCursor.hasNext()) {
             record = mongoCursor.next().toJson();
-            set.add(record);
+            list.add(record);
             logger.debug("record: " + record);
         }
-        return set;
+        return list;
+    }
+
+    public static List<String> findAllSort(String collectionName, String sortKey, String sortForm) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        FindIterable<Document> findIterable = null;
+        if(sortForm.equals(Const.DESC)) {
+            findIterable = collection.find().sort(descending(sortKey));
+        } else if(sortForm.equals(Const.ASC)) {
+            findIterable = collection.find().sort(ascending(sortKey));
+        }
+        MongoCursor<Document> mongoCursor = findIterable.iterator();
+        List<String> list = new ArrayList<String>();
+        String record;
+        while (mongoCursor.hasNext()) {
+            record = mongoCursor.next().toJson();
+            list.add(record);
+            logger.debug("record: " + record);
+        }
+        return list;
     }
 
     private static void insertTest(MongoDatabase mongoDatabase) {
@@ -391,7 +412,7 @@ public class MongoUtil {
 //            mongoDatabase.createCollection("test");
 //            System.out.println("集合创建成功");
 
-            traverse("test");
+            findAll("test");
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }

@@ -60,9 +60,10 @@ public class NettyClient {
 
     public static void main(String[] args) throws Exception {
         Transaction tx = TransactionService.genTx("test type", "test");
-        List<Transaction> txList = new ArrayList<Transaction>();
-        txList.add(tx);
-        Block block = BlockService.genBlock("0", txList);
+        BlockService blockService = BlockService.getInstance();
+        List<String> txList = new ArrayList<String>();
+        txList.add(tx.getTxId());
+        Block block = blockService.genBlock("0", txList);
         BlockMessage blockMsg = BlockMessageService.genInstance(block);
 
         String host = "127.0.0.1";

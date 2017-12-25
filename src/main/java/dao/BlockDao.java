@@ -1,5 +1,6 @@
 package dao;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.IndexOptions;
@@ -10,12 +11,18 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.Const;
 import util.MongoUtil;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by chao on 2017/12/19.
  */
 public class BlockDao {
+    private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static Logger logger = LoggerFactory.getLogger(BlockDao.class);
 
     private static class LazyHolder {
@@ -52,5 +59,23 @@ public class BlockDao {
         }
 
         return updateResult.wasAcknowledged();
+    }
+
+    /**
+     * 从集合 collectionName 获取所有 block
+     * @param collectionName
+     * @return
+     */
+    public List<Block> findAll(String collectionName) {
+        List<String> list = MongoUtil.findAllSort(collectionName, "timestamp", Const.ASC);
+        List<Block> blockList = new ArrayList<Block>();
+        for (String blockJson : list) {
+            try {
+                blockList.add(objectMapper.readValue(blockJson, Block.class));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return blockList;
     }
 }

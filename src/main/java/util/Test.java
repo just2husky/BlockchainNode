@@ -17,14 +17,15 @@ public class Test {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     public static void main(String[] args) throws Exception {
         TransactionMessageService txMsgService = TransactionMessageService.getInstance();
+        BlockService blockService = BlockService.getInstance();
         Transaction tx = TransactionService.genTx("test type", "test content");
         Message txMsg = txMsgService.genInstance(tx);
         System.out.println(txMsg.getMsgId());
         System.out.println("tx: " + txMsg);
 
-        List<Transaction> txList = new ArrayList<Transaction>();
-        txList.add(tx);
-        Block block = BlockService.genBlock("0", txList);
+        List<String> txList = new ArrayList<String>();
+        txList.add(tx.getTxId());
+        Block block = blockService.genBlock("0", txList);
         Message blockMsg = BlockMessageService.genInstance(block);
         System.out.println(blockMsg.getMsgId());
 

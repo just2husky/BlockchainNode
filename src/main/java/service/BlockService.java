@@ -26,6 +26,7 @@ public class BlockService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static Logger logger = LoggerFactory.getLogger(BlockService.class);
     private BlockDao blockDao = BlockDao.getInstance();
+    private TransactionService txService = TransactionService.getInstance();
 
     private static class LazyHolder {
         private static final BlockService INSTANCE = new BlockService();
@@ -42,31 +43,30 @@ public class BlockService {
      * @param treeHash
      * @param timestamp
      * @param txCount
-     * @param txList
+     * @param txIdList
      * @return
      */
-    public static Block genBlock(String preBlockId, String treeHash, String timestamp, int txCount, List<Transaction> txList) {
+    public Block genBlock(String preBlockId, String treeHash, String timestamp, int txCount, List<String> txIdList) {
         String sigContent = preBlockId + treeHash + timestamp;
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
         String signature = SignatureUtil.sign(privateKey, sigContent);
         String blockId = getSha256Base64(signature);
-        return new Block(blockId, preBlockId, treeHash, timestamp, txCount, txList, pubKey, signature);
+        return new Block(blockId, preBlockId, treeHash, timestamp, txCount, txIdList, pubKey, signature);
     }
 
     /**
      * 根据 preBlockId, tx list 生成一个区块
      *
      * @param preBlockId
-     * @param txList
+     * @param txIdList
      * @return
      */
-    public static Block genBlock(String preBlockId, List<Transaction> txList) {
-        List<String> txIdList = TransactionService.getTxList(txList);
+    public Block genBlock(String preBlockId, List<String> txIdList) {
         String treeHash = new MerkleTree(txIdList).getRoot();
         String timestamp = TimeUtil.getNowTimeStamp();
-        int txCount = txList.size();
-        return genBlock(preBlockId, treeHash, timestamp, txCount, txList);
+        int txCount = txIdList.size();
+        return genBlock(preBlockId, treeHash, timestamp, txCount, txIdList);
     }
 
     /**
@@ -77,28 +77,27 @@ public class BlockService {
      * @param limitSize 区块大小限制
      * @return
      */
-    public static Block genBlock(String preBlockId, String queueName, double limitTime, double limitSize){
+    public Block genBlock(String preBlockId, String queueName, double limitTime, double limitSize){
         RabbitmqUtil rmq = new RabbitmqUtil(queueName);
-        List<String> txJsonList = rmq.pull(limitTime, limitSize);
-        List<Transaction> txList = new ArrayList<Transaction>();
-        Transaction tx;
-        for (String txJson : txJsonList) {
+        List<String> pullContent = rmq.pull(limitTime, limitSize);
+        List<String> txIdList = new ArrayList<String>();
+        for (String content : pullContent) {
             // 判断 json 是 tx 对象还是 tx list
-            if(JsonUtil.isList(txJson)) {
-                for (Transaction tmpTx : TransactionService.genTxList(txJson)) {
-                    if (tmpTx != null) {
-                        txList.add(tmpTx);
+            if(JsonUtil.isList(content)) {
+                for (String txId : JsonUtil.str2list(content, String.class)) {
+                    if (txId != null) {
+                        txIdList.add(txId);
                     }
                 }
             } else {
-                tx = TransactionService.genTx(txJson);
-                if (tx != null) {
-                    txList.add(tx);
+                // 此时 content 即为 tx id
+                if (content != null) {
+                    txIdList.add(content);
                 }
             }
         }
-        if (txList.size() > 0) {
-            return genBlock(preBlockId, txList);
+        if (txIdList.size() > 0) {
+            return genBlock(preBlockId, txIdList);
         } else {
             return null;
         }
@@ -183,17 +182,28 @@ public class BlockService {
         return rmq.pull();
     }
 
+    /**
+     * 从 collectionName 中获取所有区块
+     * @param collectionName
+     * @return
+     */
+    public List<Block> getAllBlocks(String collectionName) {
+        return blockDao.findAll(collectionName);
+    }
+
     public static void main(String[] args) {
-        List<Transaction> txList = new ArrayList<Transaction>();
+        TransactionService txService = TransactionService.getInstance();
+        BlockService blockService = BlockService.getInstance();
+        List<String> txIdList = new ArrayList<String>();
         for (int i = 0; i < 10; i++) {
             try {
-                txList.add(TransactionService.genTx("string", "测试" + i));
+                txIdList.add(txService.genTx("string", "测试" + i).getTxId());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        Block block = genBlock("0", txList);
+        Block block = blockService.genBlock("0", txIdList);
         try {
             System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(block));
         } catch (JsonProcessingException e) {

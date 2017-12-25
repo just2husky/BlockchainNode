@@ -45,10 +45,10 @@ public class Blocker implements Runnable {
     }
 
     public void run() {
-        String queueName = Const.VERIFIED_TX_QUEUE;
+        String queueName = Const.TX_ID_QUEUE;
         String lastBlockId = null;
         double limitTime = 10000; // 单位毫秒
-        double limitSize = 2.0 / 1024.0; // 单位 MB
+        double limitSize = 0.5 / 1024.0; // 单位 MB
         Block block;
         while (true) {
             logger.info("正在获取 last block id ...");
@@ -60,7 +60,7 @@ public class Blocker implements Runnable {
             logger.info("获取 last block id " + lastBlockId + "成功");
             logger.info("正在生成 last block id 为 [" + lastBlockId + "] 的 block ...");
             while (true) {
-                block = BlockService.genBlock(lastBlockId, queueName, limitTime, limitSize);
+                block = blockService.genBlock(lastBlockId, queueName, limitTime, limitSize);
                 if (block != null) {
                     logger.info("生成 block：" + block.getBlockId());
                     sendBlock(block);

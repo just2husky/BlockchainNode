@@ -17,12 +17,13 @@ import static org.junit.Assert.*;
  */
 public class BlockMessageServiceTest {
     private final static Logger logger = LoggerFactory.getLogger(BlockMessageServiceTest.class);
+    private BlockService blockService = BlockService.getInstance();
     @Test
     public void verify() throws Exception {
         Transaction tx = TransactionService.genTx("test type", "test content");
-        List<Transaction> txList = new ArrayList<Transaction>();
-        txList.add(tx);
-        Block block = BlockService.genBlock("0", txList);
+        List<String> txList = new ArrayList<String>();
+        txList.add(tx.getTxId());
+        Block block = blockService.genBlock("0", txList);
         BlockMessage blockMsg = BlockMessageService.genInstance(block);
         boolean rlt = BlockMessageService.verify(blockMsg);
         logger.info(rlt + "");

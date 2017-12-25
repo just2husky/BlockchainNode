@@ -91,7 +91,7 @@ public class TransactionService {
      * @param txListJson
      * @return
      */
-    public static List<Transaction> genTxList(String txListJson) {
+    public List<Transaction> genTxList(String txListJson) {
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
             JavaType javaType = JsonUtil.getCollectionType(ArrayList.class, Transaction.class);
@@ -105,10 +105,14 @@ public class TransactionService {
 
     /**
      * 获取 Transaction List 的所有 id
-     * @param list
+     * @param txListJson
      * @return
      */
-    public static List<String> getTxList(List<Transaction> list) {
+    public List<String> getTxIdList(String txListJson) {
+        return this.getTxIdList(this.genTxList(txListJson));
+    }
+
+    public List<String> getTxIdList(List<Transaction> list) {
         List<String> txIdList = new ArrayList<String>();
         for(Transaction tx : list) {
             txIdList.add(tx.getTxId());
@@ -116,8 +120,17 @@ public class TransactionService {
         return txIdList;
     }
 
+    public String getTxId(String txJson) {
+        Transaction tx = genTx(txJson);
+        if (tx != null) {
+            return tx.getTxId();
+        } else {
+            return null;
+        }
+    }
+
     /**
-     * 将区块 block 保存到集合 blockChainCollection 中
+     * 将区块 tx保存到集合 txCollection 中
      *
      * @param tx
      * @param  txCollection

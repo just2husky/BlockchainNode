@@ -10,6 +10,7 @@ import static org.junit.Assert.*;
  * Created by chao on 2017/12/10.
  */
 public class BlockServiceTest {
+    private BlockService blockService = BlockService.getInstance();
     @Test
     public void genBlock() throws Exception {
     }
@@ -20,8 +21,8 @@ public class BlockServiceTest {
 
     @Test
     public void genBlock2() throws Exception {
-        Block block = BlockService.genBlock("0", Const.VERIFIED_TX_QUEUE, 100000, 2.0/1024.0);
-        System.out.println(block.toString());
+        Block block = blockService.genBlock("0", Const.TX_ID_QUEUE, 100000, 2.0/1024.0);
+        System.out.println(block);
     }
 
 }
