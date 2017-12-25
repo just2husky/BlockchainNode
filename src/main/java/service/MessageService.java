@@ -51,7 +51,7 @@ public class MessageService {
     public static long getSeqNum(String collectionName) {
         if (!MongoUtil.collectionExists(collectionName)) {
             logger.info("集合" + collectionName + "不存在，开始创建");
-            MongoUtil.insertKV("seqNum", "0", collectionName);
+            MongoUtil.insertKV("seqNum", Const.GENESIS_BLOCK_ID, collectionName);
             return 0;
         } else {
             String record = MongoUtil.findFirstDoc(collectionName);

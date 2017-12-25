@@ -37,4 +37,6 @@ public class Const {
 
     public final static String DESC = "descending";
     public final static String ASC = "ascending";
+
+    public final static String GENESIS_BLOCK_ID = "0";
 }

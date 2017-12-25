@@ -18,14 +18,14 @@ import java.net.Socket;
 /**
  * Created by chao on 2017/12/23.
  */
-public class PreBlockIdPublisherHandler implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(PreBlockIdPublisherHandler.class);
+public class LastBlockIdPublisherHandler implements Runnable {
+    private final static Logger logger = LoggerFactory.getLogger(LastBlockIdPublisherHandler.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private final Socket socket;
     private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
     private NetService netService = NetService.getInstance();
 
-    public PreBlockIdPublisherHandler(Socket socket) {
+    public LastBlockIdPublisherHandler(Socket socket) {
         this.socket = socket;
     }
 

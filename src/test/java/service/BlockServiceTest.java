@@ -21,7 +21,7 @@ public class BlockServiceTest {
 
     @Test
     public void genBlock2() throws Exception {
-        Block block = blockService.genBlock("0", Const.TX_ID_QUEUE, 100000, 2.0/1024.0);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, Const.TX_ID_QUEUE, 100000, 2.0/1024.0);
         System.out.println(block);
     }
 

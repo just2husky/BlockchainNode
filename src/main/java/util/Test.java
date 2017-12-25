@@ -25,7 +25,7 @@ public class Test {
 
         List<String> txList = new ArrayList<String>();
         txList.add(tx.getTxId());
-        Block block = blockService.genBlock("0", txList);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txList);
         Message blockMsg = BlockMessageService.genInstance(block);
         System.out.println(blockMsg.getMsgId());
 

@@ -16,6 +16,7 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import service.BlockMessageService;
 import service.BlockService;
 import service.TransactionService;
+import util.Const;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -63,7 +64,7 @@ public class NettyClient {
         BlockService blockService = BlockService.getInstance();
         List<String> txList = new ArrayList<String>();
         txList.add(tx.getTxId());
-        Block block = blockService.genBlock("0", txList);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txList);
         BlockMessage blockMsg = BlockMessageService.genInstance(block);
 
         String host = "127.0.0.1";

@@ -125,7 +125,7 @@ public class BlockService {
     public void initLastBlockIdColl(String collectionName) {
         if (!MongoUtil.collectionExists(collectionName)) {
             logger.debug("集合" + collectionName + "不存在，开始创建");
-            MongoUtil.insertKV(Const.LAST_BLOCK_ID, "0", collectionName);
+            MongoUtil.insertKV(Const.LAST_BLOCK_ID, Const.GENESIS_BLOCK_ID, collectionName);
         }
     }
 
@@ -137,7 +137,7 @@ public class BlockService {
     public String getLastBlockId(String collectionName){
         if (!MongoUtil.collectionExists(collectionName)) {
             initLastBlockIdColl(collectionName);
-            return "0";
+            return Const.GENESIS_BLOCK_ID;
         } else {
             String record = MongoUtil.findFirstDoc(collectionName);
             if (record != null && !record.equals("")) {
@@ -203,7 +203,7 @@ public class BlockService {
             }
         }
 
-        Block block = blockService.genBlock("0", txIdList);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txIdList);
         try {
             System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(block));
         } catch (JsonProcessingException e) {

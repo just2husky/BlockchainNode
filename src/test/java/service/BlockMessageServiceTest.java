@@ -6,6 +6,7 @@ import entity.Transaction;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.Const;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class BlockMessageServiceTest {
         Transaction tx = TransactionService.genTx("test type", "test content");
         List<String> txList = new ArrayList<String>();
         txList.add(tx.getTxId());
-        Block block = blockService.genBlock("0", txList);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txList);
         BlockMessage blockMsg = BlockMessageService.genInstance(block);
         boolean rlt = BlockMessageService.verify(blockMsg);
         logger.info(rlt + "");
