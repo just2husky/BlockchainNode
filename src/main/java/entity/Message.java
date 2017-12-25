@@ -22,6 +22,7 @@ import util.Const;
         @JsonSubTypes.Type(value = CommitMessage.class, name = Const.CMTM),
         @JsonSubTypes.Type(value = CommittedMessage.class, name = Const.CMTDM),
         @JsonSubTypes.Type(value = LastBlockIdMessage.class, name = Const.LBIM),
+        @JsonSubTypes.Type(value = TxIdMessage.class, name = Const.TIM),
         @JsonSubTypes.Type(value = ClientMessage.class, name = Const.CM)})
 public class Message {
     private String msgId;

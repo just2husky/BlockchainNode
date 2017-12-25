@@ -37,6 +37,15 @@ public class TransactionService {
     }
 
     /**
+     * 根据 id 判断 tx 是否存在于集合 collectionName 中
+     * @param txId
+     * @param collectionName
+     * @return
+     */
+    public boolean exited(String txId, String collectionName) {
+        return txDao.existed("txId", txId, collectionName);
+    }
+    /**
      * 根据 Transaction 的类型，和要存储在 Transaction 中的 content 来生成一个 Transaction 对象
      * @param txType
      * @param content

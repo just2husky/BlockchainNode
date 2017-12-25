@@ -1,10 +1,12 @@
 package socket;
 
+import entity.NetAddress;
 import handler.LastBlockIdPublisherHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.BlockService;
 import util.Const;
+import util.JsonUtil;
 import util.NetUtil;
 
 import java.io.IOException;
@@ -17,7 +19,7 @@ import java.util.concurrent.Executors;
  * Created by chao on 2017/12/19.
  * 用做 Pre Block Id 的发布中心
  */
-public class LastBlockIdPublisher implements Runnable{
+public class LastBlockIdPublisher implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(LastBlockIdPublisher.class);
     private final ServerSocket serverSocket;
     private final ExecutorService threadPool;
@@ -38,7 +40,7 @@ public class LastBlockIdPublisher implements Runnable{
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();
 //        }
-        String url = NetUtil.getRealIp() + ":" +serverSocket.getLocalPort();
+        String url = NetUtil.getRealIp() + ":" + serverSocket.getLocalPort();
         String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
         String lastBlockId = blockService.getLastBlockId(lbiCollection);
         blockService.addLastBlockIdToQueue(lastBlockId);
@@ -56,8 +58,9 @@ public class LastBlockIdPublisher implements Runnable{
 
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
+        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
         try {
-            new Thread(new LastBlockIdPublisher(9000, availableProcessors)).start();
+            new Thread(new LastBlockIdPublisher(na.getPort(), availableProcessors)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

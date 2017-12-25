@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.*;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.UpdateResult;
 import entity.*;
@@ -44,6 +45,7 @@ public class MongoUtil {
 
     /**
      * 获取集合
+     *
      * @param collectionName
      * @return
      */
@@ -65,15 +67,25 @@ public class MongoUtil {
 
     /**
      * 根据 key，value，将 json 数据插入到名字为 collectionName 的 collection（表） 中
-     *
+     * @param key
+     * @param value
      * @param jsonStr
      * @param collectionName
+     * @param uniqueIndex 是否创建唯一索引
+     * @return
      */
-    public static boolean upSertJson(String key, String value, String jsonStr, String collectionName) {
+    public static boolean upSertJson(String key, String value, String jsonStr, String collectionName, boolean uniqueIndex) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+
+        // 如果集合不存在，并且需要创建唯一索引，则创建唯一索引
+        if (!MongoUtil.collectionExists(collectionName) && uniqueIndex) {
+            Document index = new Document(key, 0);
+            collection.createIndex(index, new IndexOptions().unique(true));
+        }
+
         Document document = Document.parse(jsonStr);
         Bson filter = Filters.eq(key, value);
-        Bson update =  new Document("$set", document);
+        Bson update = new Document("$set", document);
         UpdateOptions options = new UpdateOptions().upsert(true);
         UpdateResult updateResult = collection.updateOne(filter, update, options);
         return updateResult.wasAcknowledged();
@@ -86,7 +98,7 @@ public class MongoUtil {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             filter = Filters.and(Filters.eq(entry.getKey(), entry.getValue()));
         }
-        if(filter != null) {
+        if (filter != null) {
             Bson update = new Document("$set", document);
             UpdateOptions options = new UpdateOptions().upsert(true);
             UpdateResult updateResult = collection.updateOne(filter, update, options);
@@ -175,9 +187,9 @@ public class MongoUtil {
     public static List<String> findAllSort(String collectionName, String sortKey, String sortForm) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         FindIterable<Document> findIterable = null;
-        if(sortForm.equals(Const.DESC)) {
+        if (sortForm.equals(Const.DESC)) {
             findIterable = collection.find().sort(descending(sortKey));
-        } else if(sortForm.equals(Const.ASC)) {
+        } else if (sortForm.equals(Const.ASC)) {
             findIterable = collection.find().sort(ascending(sortKey));
         }
         MongoCursor<Document> mongoCursor = findIterable.iterator();
@@ -230,6 +242,7 @@ public class MongoUtil {
 
     /**
      * 获取所有满足 key = value 的文档
+     *
      * @param key
      * @param value
      * @param collectionName
@@ -287,12 +300,12 @@ public class MongoUtil {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(msg != null && msg.getClass().getSimpleName().equals("PrepareMessage")) {
+            if (msg != null && msg.getClass().getSimpleName().equals("PrepareMessage")) {
                 PrepareMessage pm = (PrepareMessage) msg;
                 if (pm.getViewId().equals(viewId) && pm.getSeqNum().equals(seqNum)) {
                     count++;
                 }
-            } else if(msg != null && msg.getClass().getSimpleName().equals("CommitMessage")) {
+            } else if (msg != null && msg.getClass().getSimpleName().equals("CommitMessage")) {
                 CommitMessage cm = (CommitMessage) msg;
                 if (cm.getViewId().equals(viewId) && cm.getSeqNum().equals(seqNum)) {
                     count++;
@@ -366,6 +379,7 @@ public class MongoUtil {
 
     /**
      * 获取集合 collectionName 中的记录数
+     *
      * @param collectionName
      * @return
      */
@@ -376,6 +390,7 @@ public class MongoUtil {
 
     /**
      * 根据 key 获取所有对应的value
+     *
      * @param key
      * @param collectionName
      * @return
@@ -393,6 +408,7 @@ public class MongoUtil {
 
     /**
      * 根据 key 统计去重统计所有value的个数
+     *
      * @param key
      * @param collectionName
      * @return

@@ -38,7 +38,7 @@ public class LastBlockIdPublisherHandler implements Runnable {
             String rcvMsg = in.readUTF();
             Message myMsg = objectMapper.readValue(rcvMsg, Message.class);
             String msgType = myMsg.getMsgType();
-            logger.info("msgType: " + msgType);
+            logger.info("接收到 msgType 为 [" + msgType + "] 的 Msg");
             String realIp = NetUtil.getRealIp();
             String url = realIp + ":" + socket.getLocalPort();
             String lbiCollection = "Publisher" + url + "." + Const.LAST_BLOCK_ID;
@@ -51,7 +51,7 @@ public class LastBlockIdPublisherHandler implements Runnable {
                 out.writeUTF("接收到你的 LastBlockIdMessage： " + lbiMsg.getMsgId());
                 out.flush();
                 socket.close();
-                lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
+                lbmService.procLastBlockIdMsg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
 
             } else if (msgType.equals(Const.BM)) {
                 BlockMessage blockMsg = (BlockMessage) myMsg;

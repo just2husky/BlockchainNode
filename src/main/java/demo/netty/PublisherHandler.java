@@ -49,7 +49,7 @@ public class PublisherHandler extends ChannelInboundHandlerAdapter {
 
         if(msgType.equals(Const.LBIM)) {
             LastBlockIdMessage lbiMsg = (LastBlockIdMessage) myMsg;
-            lbmService.procLastBlockIdMSg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
+            lbmService.procLastBlockIdMsg(lbiMsg, lbiCollection, lbiMsgCollection, simpleBlockCollection);
         } else if (msgType.equals(Const.BM)) {
             Block block = ((BlockMessage) myMsg).getBlock();
             logger.info("服务器接收到区块: " + block.getBlockId());

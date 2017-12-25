@@ -108,6 +108,19 @@ public class JsonUtil {
         Map pubMap = (HashMap) map.get("publisher");
         return new NetAddress((String)pubMap.get("ip"), (Integer) pubMap.get("port"));
     }
+
+    /**
+     *  获取 TxIdCollector 的地址
+     * @param jsonFile
+     * @return
+     */
+    public static NetAddress getTxIdCollectorAddress(String jsonFile) {
+        String jsonStr = getStrByJsonFile(jsonFile);
+        Map map = jsonToMap(jsonStr);
+        Map pubMap = (HashMap) map.get("tx_id_collector");
+        return new NetAddress((String)pubMap.get("ip"), (Integer) pubMap.get("port"));
+    }
+
     /**
      * 判断json字符串是否是一个list
      *

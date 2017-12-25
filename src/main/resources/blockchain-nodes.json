@@ -20,5 +20,9 @@
   "publisher": {
     "ip": "127.0.0.1",
     "port": 9000
+  },
+  "tx_id_collector": {
+    "ip": "127.0.0.1",
+    "port": 9001
   }
 }

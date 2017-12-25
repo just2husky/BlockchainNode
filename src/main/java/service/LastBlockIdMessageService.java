@@ -38,7 +38,7 @@ public class LastBlockIdMessageService {
      * @param lbiMsg
      * @param lbiCollection
      */
-    public void procLastBlockIdMSg(LastBlockIdMessage lbiMsg, String lbiCollection, String lbiMsgCollection,
+    public void procLastBlockIdMsg(LastBlockIdMessage lbiMsg, String lbiCollection, String lbiMsgCollection,
                                    String simpleBlockCollection) {
         String lastBlockId = lbiMsg.getLastBlockId();
         // 1. 校验接收到的 lastBlockIdMessage
@@ -108,7 +108,7 @@ public class LastBlockIdMessageService {
      */
     public int count(String lastBlockId, String collectionName) {
         List<String> list = MongoUtil.find("lastBlockId", lastBlockId, collectionName);
-        // TODO
+        // TODO 要校验 lastBlockId 是否是同一个节点发送的
 //        List<LastBlockIdMessage> lbiMsgList = new ArrayList<LastBlockIdMessage>();
 //        Iterator<String> it = list.iterator();
 //        while (it.hasNext()) {

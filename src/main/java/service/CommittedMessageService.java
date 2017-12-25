@@ -27,6 +27,7 @@ public class CommittedMessageService {
     private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
     private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
+    private TxIdMessageService timSrv = TxIdMessageService.getInstance();
     private NetService netService = NetService.getInstance();
 
     private static class LazyHolder {
@@ -53,7 +54,8 @@ public class CommittedMessageService {
         String cmtdMsgCollection = url + "." + Const.CMTDM;
         String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
         String cliMsgType = clientMessage.getClass().getSimpleName();
-        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
+        NetAddress publisherAddr = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
+        NetAddress txIdCollectorAddr = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
             logger.info("将 CommittedMessage [" + cmtdMsg.toString() + "] 存入数据库");
@@ -67,9 +69,11 @@ public class CommittedMessageService {
                     logger.info("区块 " + blockId + " 存入成功");
                     if(blockService.updateLastBlockId(blockId , lbiCollection)) {
                         logger.info("Last block Id: " + blockId + " 更新成功");
+
+                        // 验证成功的 tx 发送到 LastBlockPublisher 服务器上
                         LastBlockIdMessage lbMsg = lbmService.genInstance(blockId, block.getPreBlockId(), realIp, localPort);
-                        netService.sendMsg(lbMsg.toString(), na.getIp(), na.getPort());
-//                            new NettyClient(na.getIp(), na.getPort()).start(lbMsg.toString());
+                        netService.sendMsg(lbMsg.toString(), publisherAddr.getIp(), publisherAddr.getPort());
+//                            new NettyClient(publisherAddr.getIp(), publisherAddr.getPort()).start(lbMsg.toString());
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");
                     }
@@ -82,9 +86,12 @@ public class CommittedMessageService {
                 TransactionMessage txMessage = (TransactionMessage) clientMessage;
                 Transaction transaction = txMessage.getTransaction();
                 if (txService.save(transaction, txCollection)) {
-                    logger.info("交易" + transaction.getTxId() + " 存入成功");
-                    // 验证成功的 tx push 到 TX——ID_QUEUE 上供 Blocker 打包
-                    txService.pushTx(transaction, Const.TX_ID_QUEUE);
+                    String txId = transaction.getTxId();
+                    logger.info("交易" + txId + " 存入成功");
+
+                    // 验证成功的 tx 发送到 TxIdCollector 服务器上
+                    TxIdMessage txIdMsg = timSrv.genInstance(txId, realIp, localPort);
+                    netService.sendMsg(txIdMsg.toString(), txIdCollectorAddr.getIp(), txIdCollectorAddr.getPort());
                 }
             } else {
                 logger.error("clientMessage的类型为：" + clientMessage.getClass().getSimpleName());

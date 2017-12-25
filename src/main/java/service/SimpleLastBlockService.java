@@ -21,12 +21,15 @@ import util.MongoUtil;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SimpleLastBlockService {
-    private final static ObjectMapper objectMapper = new ObjectMapper();
     private final static Logger logger = LoggerFactory.getLogger(BlockService.class);
+
     private static class LazyHolder {
         private static final SimpleLastBlockService INSTANCE = new SimpleLastBlockService();
     }
-    private SimpleLastBlockService (){}
+
+    private SimpleLastBlockService() {
+    }
+
     public static SimpleLastBlockService getInstance() {
         return LazyHolder.INSTANCE;
     }
@@ -45,7 +48,7 @@ public class SimpleLastBlockService {
     public boolean upSert(SimpleLastBlock block, String collectionName) {
         MongoCollection<Document> collection = MongoUtil.getCollection(collectionName);
         // 如果集合不存在，则创建唯一索引
-        if(!MongoUtil.collectionExists(collectionName)) {
+        if (!MongoUtil.collectionExists(collectionName)) {
             Document index = new Document("blockId", 0);
             collection.createIndex(index, new IndexOptions().unique(true));
         }

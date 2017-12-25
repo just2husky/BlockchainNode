@@ -1,4 +1,4 @@
-package frontend;
+package socket;
 
 import entity.NetAddress;
 import task.Task;

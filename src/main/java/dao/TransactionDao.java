@@ -50,8 +50,14 @@ public class TransactionDao {
         Bson filter = Filters.eq("txId", tx.getTxId());
         Bson update = new Document("$set", document);
         UpdateOptions options = new UpdateOptions().upsert(true);
-        UpdateResult updateResult = collection.updateOne(filter, update, options);
-        return updateResult.wasAcknowledged();
+        UpdateResult updateResult = null;
+        try {
+            updateResult = collection.updateOne(filter, update, options);
+        } catch (com.mongodb.MongoWriteException e) {
+            logger.error(e.getMessage());
+        }
+
+        return updateResult != null && updateResult.wasAcknowledged();
     }
 
     /**
@@ -80,5 +86,16 @@ public class TransactionDao {
     public void push(Transaction tx, String queueName) {
         RabbitmqUtil rmq = new RabbitmqUtil(queueName);
         rmq.push(tx.toString());
+    }
+
+    /**
+     * 判断 key = value 的文档是否存在与 collectionName 中
+     * @param key
+     * @param value
+     * @param collectionName
+     * @return
+     */
+    public boolean existed(String key, String value, String collectionName) {
+        return MongoUtil.findByKV(key, value, collectionName);
     }
 }

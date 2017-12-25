@@ -13,6 +13,11 @@ import static org.junit.Assert.*;
  * Created by chao on 2017/12/10.
  */
 public class JsonUtilTest {
+    @Test
+    public void getTxIdCollectorAddress() throws Exception {
+        System.out.println(JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile));
+    }
+
     private final static ObjectMapper objMapper = new ObjectMapper();
 
     @Test
