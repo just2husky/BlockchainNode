@@ -5,25 +5,27 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import util.Const;
 
+import java.util.List;
+
 /**
  * Created by chao on 2017/11/11.
  * client 向 Validator 发送的消息
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionMessage extends ClientMessage {
-    private Transaction transaction;
+    private List<Transaction> txList;
 
     public TransactionMessage() {
     }
 
-    public TransactionMessage(String msgId, String timestamp, String pubKey, String signature, Transaction transaction) {
+    public TransactionMessage(String msgId, String timestamp, String pubKey, String signature, List<Transaction> txList) {
         super(msgId, Const.TXM, timestamp, pubKey, signature);
-        this.transaction = transaction;
+        this.txList = txList;
     }
 
-    public TransactionMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, Transaction transaction) {
+    public TransactionMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, List<Transaction> txList) {
         super(msgId, msgType, timestamp, pubKey, signature);
-        this.transaction = transaction;
+        this.txList = txList;
     }
 
     @Override
@@ -37,11 +39,11 @@ public class TransactionMessage extends ClientMessage {
         return rtn;
     }
 
-    public Transaction getTransaction() {
-        return transaction;
+    public List<Transaction> getTxList() {
+        return txList;
     }
 
-    public void setTransaction(Transaction transaction) {
-        this.transaction = transaction;
+    public void setTxList(List<Transaction> txList) {
+        this.txList = txList;
     }
 }

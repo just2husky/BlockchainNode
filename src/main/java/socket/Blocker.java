@@ -48,7 +48,7 @@ public class Blocker implements Runnable {
         String queueName = Const.TX_ID_QUEUE;
         String lastBlockId = null;
         double limitTime = 10000; // 单位毫秒
-        double limitSize = 0.5 / 1024.0; // 单位 MB
+        double limitSize = 20 / 1024.0; // 单位 MB
         Block block;
         while (true) {
             logger.info("正在获取 last block id ...");

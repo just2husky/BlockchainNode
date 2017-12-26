@@ -82,7 +82,7 @@ public class BlockService {
         List<String> pullContent = rmq.pull(limitTime, limitSize);
         List<String> txIdList = new ArrayList<String>();
         for (String content : pullContent) {
-            // 判断 json 是 tx 对象还是 tx list
+            // 判断 json 是 tx id 对象还是 tx id list
             if(JsonUtil.isList(content)) {
                 for (String txId : JsonUtil.str2list(content, String.class)) {
                     if (txId != null) {

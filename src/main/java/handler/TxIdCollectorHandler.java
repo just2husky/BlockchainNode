@@ -36,7 +36,7 @@ public class TxIdCollectorHandler implements Runnable {
             String rcvMsg = in.readUTF();
             Message myMsg = objectMapper.readValue(rcvMsg, Message.class);
             String msgType = myMsg.getMsgType();
-            logger.info("接收到 msgType 为 [" + msgType + "] 的 Msg");
+            logger.debug("接收到 msgType 为 [" + msgType + "] 的 Msg");
             String realIp = NetUtil.getRealIp();
             String url = realIp + ":" + socket.getLocalPort();
             String timCollection = "TxIdCollector" + url + "." + "TxIdMsgs";
@@ -48,6 +48,7 @@ public class TxIdCollectorHandler implements Runnable {
                 out.flush();
                 socket.close();
                 timSrv.procTxIdMsg(tim, timCollection, txIdCollection);
+                logger.info("完成对[" + msgType + "] msg: " + tim.getMsgId() + " 的处理");
             } else {
                 logger.error("服务器接收到尚不能处理类型的 msg: " + rcvMsg);
                 out.writeUTF("服务器接收到尚不能处理类型的 msg: " + rcvMsg);

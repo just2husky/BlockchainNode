@@ -45,6 +45,22 @@ public class TransactionService {
     public boolean exited(String txId, String collectionName) {
         return txDao.existed("txId", txId, collectionName);
     }
+
+    /**
+     * 判断 td id list 中 id 是否已被保存在集合当中
+     * @param txIdList
+     * @param collection
+     * @return
+     */
+    public boolean allExited(List<String> txIdList, String collection) {
+        for (String txId : txIdList) {
+            if(!this.exited(txId, collection)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * 根据 Transaction 的类型，和要存储在 Transaction 中的 content 来生成一个 Transaction 对象
      * @param txType
@@ -89,6 +105,17 @@ public class TransactionService {
      */
     public Transaction pullTx(String queueName) {
         return txDao.pull(queueName);
+    }
+
+    /**
+     * 根据时间大小限制获取 Transaction
+     * @param queueName
+     * @param limitTime
+     * @param limitSize
+     * @return
+     */
+    public List<Transaction> pullTxList(String queueName, double limitTime, double limitSize) {
+        return txDao.pull(queueName, limitTime, limitSize);
     }
 
     public void pushTx(Transaction tx, String queueName) {
@@ -147,6 +174,10 @@ public class TransactionService {
      */
     public boolean save(Transaction tx, String txCollection) {
         return txDao.upSert(tx, txCollection);
+    }
+
+    public boolean saveBatch(List<Transaction> txList, String txCollection) {
+        return txDao.upSertBatch(txList, txCollection);
     }
 
     public static void main(String[] args) throws Exception {

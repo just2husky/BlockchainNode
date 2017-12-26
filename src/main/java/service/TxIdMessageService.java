@@ -41,20 +41,20 @@ public class TxIdMessageService {
             // 2. 保存接收到的 TxIdMessage
             if (this.save(tim, timCollection)) {
                 // 满足接收到 2f + 1 个来自不同节点的 TxId消息
-                String txId = tim.getTxId();
-                if (2 * PeerUtil.getFaultCount() + 1 <= this.count(txId, timCollection)) {
+                String treeHash = tim.getTreeHash();
+                if (2 * PeerUtil.getFaultCount() + 1 <= this.count(treeHash, timCollection)) {
+                    List<String> txIdList = tim.getTxIdList();
                     synchronized (this) {
-                        if (!txSrv.exited(txId, txIdCollection)) {
-                            if (txIdSrv.upSert(txIdSrv.genInstance(tim), txIdCollection)) {
-                                txIdSrv.addTxIdToQueue(txId);
-                                logger.info("发送 tx id [" + txId + "] 到 " + Const.TX_ID_QUEUE);
+                        if (!txSrv.allExited(txIdList, txIdCollection)) {
+                            if (txIdSrv.upSertBatch(txIdSrv.genInstances(tim), txIdCollection)) {
+                                txIdSrv.addTxIdsToQueue(txIdList);
+                                logger.info("发送 tx id [" + txIdList + "] 到 " + Const.TX_ID_QUEUE);
                             }
                         } else {
-                            logger.debug("txId: " + txId + " 已存在集合 " + txIdCollection + " 中");
+                            logger.debug("txId: " + txIdList + " 已存在集合 " + txIdCollection + " 中");
                         }
                     }
                 }
-
             } else {
                 logger.error("TxIdMessage: " + tim.getMsgId() + "已存在");
             }
@@ -63,21 +63,22 @@ public class TxIdMessageService {
         }
     }
 
-    public TxIdMessage genInstance(String txId, String ip, int port) {
+    public TxIdMessage genInstance(List<String> txIdList, String ip, int port) {
         String timestamp = TimeUtil.getNowTimeStamp();
+        String treeHash = new MerkleTree(txIdList).getRoot();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getSignContent(txId, timestamp, ip, port));
+        String signature = SignatureUtil.sign(privateKey, getSignContent(txIdList, timestamp, treeHash, ip, port));
         String msgId = getSha256Base64(signature);
-        return new TxIdMessage(msgId, timestamp, pubKey, signature, txId, ip, port);
+        return new TxIdMessage(msgId, timestamp, pubKey, signature, txIdList, treeHash, ip, port);
     }
 
-    private String getSignContent(String txId, String timestamp, String ip, int port) {
+    private String getSignContent(List<String> txId, String timestamp, String treeHash, String ip, int port) {
         return txId + timestamp + ip + port;
     }
 
     public boolean verify(TxIdMessage tim) {
-        return SignatureUtil.verify(tim.getPubKey(), getSignContent(tim.getTxId(), tim.getTimestamp(),
+        return SignatureUtil.verify(tim.getPubKey(), getSignContent(tim.getTxIdList(), tim.getTimestamp(), tim.getTreeHash(),
                 tim.getIp(), tim.getPort()), tim.getSignature());
     }
 
@@ -88,11 +89,11 @@ public class TxIdMessageService {
     /**
      * 统计 txIdMsg 在集合 collectionName 中的个数
      *
-     * @param txId
+     * @param treeHash
      * @return
      */
-    public int count(String txId, String collectionName) {
-        List<String> list = timDao.findByTxId(txId, collectionName);
+    public int count(String treeHash, String collectionName) {
+        List<String> list = timDao.findByTreeHash(treeHash, collectionName);
         // TODO 需要校验 TxIdMsg 是否是同一个节点发送的
         return list.size();
     }

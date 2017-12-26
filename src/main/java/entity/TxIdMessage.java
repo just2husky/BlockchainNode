@@ -5,28 +5,36 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import util.Const;
 
+import java.util.List;
+
 /**
  * Created by chao on 2017/12/25.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TxIdMessage extends Message {
-    private String txId;
+    private List<String> txIdList;
+    private String treeHash;
     private String ip;
     private int port;
 
     public TxIdMessage() {
     }
 
-    public TxIdMessage(String msgId, String timestamp, String pubKey, String signature, String txId, String ip, int port) {
+    public TxIdMessage(String msgId, String timestamp, String pubKey, String signature,
+                       List<String> txIdList, String treeHash, String ip, int port) {
         super(msgId, Const.TIM, timestamp, pubKey, signature);
-        this.txId = txId;
+        this.txIdList = txIdList;
+        this.treeHash = treeHash;
         this.ip = ip;
         this.port = port;
     }
 
-    public TxIdMessage(String msgId, String msgType, String timestamp, String pubKey, String signature, String txId, String ip, int port) {
+
+    public TxIdMessage(String msgId, String msgType, String timestamp, String pubKey, String signature,
+                       List<String> txIdList, String treeHash, String ip, int port) {
         super(msgId, msgType, timestamp, pubKey, signature);
-        this.txId = txId;
+        this.txIdList = txIdList;
+        this.treeHash = treeHash;
         this.ip = ip;
         this.port = port;
     }
@@ -42,12 +50,20 @@ public class TxIdMessage extends Message {
         return rtn;
     }
 
-    public String getTxId() {
-        return txId;
+    public List<String> getTxIdList() {
+        return txIdList;
     }
 
-    public void setTxId(String txId) {
-        this.txId = txId;
+    public void setTxIdList(List<String> txIdList) {
+        this.txIdList = txIdList;
+    }
+
+    public String getTreeHash() {
+        return treeHash;
+    }
+
+    public void setTreeHash(String treeHash) {
+        this.treeHash = treeHash;
     }
 
     public String getIp() {

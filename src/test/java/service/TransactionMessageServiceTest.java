@@ -6,6 +6,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -17,7 +20,9 @@ public class TransactionMessageServiceTest {
     @Test
     public void verify() throws Exception {
         Transaction tx = TransactionService.genTx("test type", "test content");
-        TransactionMessage txMsg = txMsgService.genInstance(tx);
+        List<Transaction> txList = new ArrayList<Transaction>();
+        txList.add(tx);
+        TransactionMessage txMsg = txMsgService.genInstance(txList);
         boolean rlt = TransactionMessageService.verify(txMsg);
         logger.info(rlt + "");
         assertEquals(true, rlt);

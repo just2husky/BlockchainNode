@@ -3,7 +3,10 @@ package socket;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
+import entity.Transaction;
 import service.TransactionMessageService;
 import service.TransactionService;
 
@@ -24,7 +27,9 @@ public class Client {
 
             OutputStream outToServer = client.getOutputStream();
             DataOutputStream out = new DataOutputStream(outToServer);
-            String txMsg = txMsgService.genInstance(TransactionService.genTx("string", "测试")).toString();
+            List<Transaction> txList = new ArrayList<Transaction>();
+            txList.add(TransactionService.genTx("string", "测试"));
+            String txMsg = txMsgService.genInstance(txList).toString();
             out.writeUTF(txMsg);
 
             InputStream inFromServer = client.getInputStream();

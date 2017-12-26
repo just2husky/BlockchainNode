@@ -30,7 +30,7 @@ public class TransactionIdCollector implements Runnable {
     public void run() {
         String url = NetUtil.getRealIp() + ":" + serverSocket.getLocalPort();
         try {
-            logger.info("启动 TransactionIdCollector 服务器");
+            logger.info("启动 TransactionIdCollector 服务器 " + url);
             while (true) {
                 threadPool.execute(new TxIdCollectorHandler(serverSocket.accept()));
             }

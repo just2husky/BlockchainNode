@@ -90,11 +90,13 @@ public class NetService {
             OutputStream outToServer = client.getOutputStream();
             DataOutputStream out = new DataOutputStream(outToServer);
             out.writeUTF(msg);
+            out.flush();
+            logger.info("完成写入");
 
             InputStream inFromServer = client.getInputStream();
             DataInputStream in = new DataInputStream(inFromServer);
             rcvMsg = in.readUTF();
-            logger.debug("服务器响应： " + rcvMsg);
+            logger.info("服务器响应： " + rcvMsg);
             client.close();
         } catch (IOException e) {
             e.printStackTrace();

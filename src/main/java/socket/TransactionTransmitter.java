@@ -9,6 +9,8 @@ import service.TransactionService;
 import util.Const;
 import util.NetUtil;
 
+import java.util.List;
+
 /**
  * Created by chao on 2017/12/19.
  * 用于从 RabbitMQ 中获取 Transaction，发送到 Validator 主节点上
@@ -24,7 +26,7 @@ public class TransactionTransmitter implements Runnable {
     private int primaryValidatorPort;
 
     public TransactionTransmitter() {
-        this.timeInterval = 1000;
+        this.timeInterval = 500;
         this.timeout = 5000;
         this.primaryValidatorIP = NetUtil.getPrimaryNode().getIp();
         this.primaryValidatorPort = NetUtil.getPrimaryNode().getPort();
@@ -44,12 +46,14 @@ public class TransactionTransmitter implements Runnable {
     @Override
     public void run() {
         String queueName = Const.TX_QUEUE;
-        Transaction tx;
+        double limitTime = 5000; // 单位毫秒
+        double limitSize = 20 / 1024.0; // 单位 MB
+        List<Transaction> txList ;
         while (true) {
-            tx = txService.pullTx(queueName);
-            if (tx != null) {
-                logger.info("获得 Transaction：" + tx.getTxId());
-                sendTx(tx);
+            txList = txService.pullTxList(queueName, limitTime, limitSize);
+            if (txList != null && txList.size() > 0) {
+                logger.info("获得 Transaction：" + txService.getTxIdList(txList));
+                sendTxMsg(txList);
             }
             try {
                 Thread.sleep(timeInterval);
@@ -60,14 +64,15 @@ public class TransactionTransmitter implements Runnable {
 
     }
 
-    public void sendTx(Transaction tx) {
-        logger.info("开始发送 Transaction：" + tx.getTxId());
-        String rcvMsg = netService.sendMsg(txMsgService.genInstance(tx).toString(), primaryValidatorIP,
+    public void sendTxMsg(List<Transaction> txList) {
+        logger.info("开始发送 Transaction List");
+        String rcvMsg = netService.sendMsg(txMsgService.genInstance(txList).toString(), primaryValidatorIP,
                 primaryValidatorPort, timeout);
         logger.info("服务器响应： " + rcvMsg);
     }
 
     public static void main(String[] args) {
+        logger.info("启动 TransactionTransmitter 服务器");
         new Thread(new TransactionTransmitter()).start();
     }
 

@@ -70,4 +70,8 @@ public class TxIdMessageDao {
     public List<String> findByTxId(String txId, String collectionName) {
         return MongoUtil.find("txId", txId, collectionName);
     }
+
+    public List<String> findByTreeHash(String treeHash, String collectionName) {
+        return MongoUtil.find("treeHash", treeHash, collectionName);
+    }
 }

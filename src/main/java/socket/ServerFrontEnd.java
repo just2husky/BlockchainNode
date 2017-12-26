@@ -29,6 +29,7 @@ public class ServerFrontEnd {
 
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newFixedThreadPool(availableProcessors);
+        logger.info("availableProcessors: " + availableProcessors);
         for (NetAddress va : netAddressList) {
             try {
                 logger.info("开始启动端口为[" + va.getPort() + "]的 Validator");

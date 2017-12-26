@@ -3,6 +3,9 @@ package service;
 import entity.TxIdMessage;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -12,7 +15,10 @@ public class TxIdMessageServiceTest {
     private TxIdMessageService timSrv = TxIdMessageService.getInstance();
     @Test
     public void verify() throws Exception {
-        TxIdMessage tim = timSrv.genInstance("111", "127.0.0.1", 8000);
+        List<String> txIdList = new ArrayList<String>();
+        txIdList.add("111");
+        txIdList.add("222");
+        TxIdMessage tim = timSrv.genInstance(txIdList, "127.0.0.1", 8000);
         System.out.println(tim);
         assertEquals(true, timSrv.verify(tim));
     }

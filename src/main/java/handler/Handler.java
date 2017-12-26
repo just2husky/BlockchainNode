@@ -40,7 +40,7 @@ public class Handler implements Runnable {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             String rcvMsg = in.readUTF();
             String msgType = (String) objectMapper.readValue(rcvMsg, Map.class).get("msgType");
-            logger.info("接收到的 Msg 类型为： [" + msgType + "]");
+            logger.debug("接收到的 Msg 类型为： [" + msgType + "]");
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 //            out.writeUTF("接收到你发来的消息");
 //            out.flush();

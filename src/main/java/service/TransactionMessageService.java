@@ -1,6 +1,7 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dao.TransactionDao;
 import entity.PrePrepareMessage;
 import entity.Transaction;
 import entity.TransactionMessage;
@@ -10,6 +11,8 @@ import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.List;
 
 import static service.MessageService.updateSeqNum;
 import static util.SignatureUtil.getSha256Base64;
@@ -22,6 +25,8 @@ import static util.SignatureUtil.loadPvtKey;
 public class TransactionMessageService {
     private final static Logger logger = LoggerFactory.getLogger(TransactionMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+    private TransactionDao txDao = TransactionDao.getInstance();
+    private NetService netService = NetService.getInstance();
 
     private static class LazyHolder {
         private static final TransactionMessageService INSTANCE = new TransactionMessageService();
@@ -78,16 +83,33 @@ public class TransactionMessageService {
 
     /**
      * 根据 transaction 生成 message
-     * @param transaction
+     * @param txList
      * @return
      */
-    public TransactionMessage genInstance(Transaction transaction) {
+    public TransactionMessage genInstance(List<Transaction> txList) {
         String timestamp = TimeUtil.getNowTimeStamp();
         PrivateKey privateKey = loadPvtKey("EC");
         String pubKey = loadPubKeyStr("EC");
-        String signature = SignatureUtil.sign(privateKey, getSignContent(transaction, timestamp, pubKey));
+        String signature = SignatureUtil.sign(privateKey, getSignContent(txList, timestamp, pubKey));
         String msgId = getSha256Base64(signature);
-        return new TransactionMessage(msgId, timestamp, pubKey, signature, transaction);
+        return new TransactionMessage(msgId, timestamp, pubKey, signature, txList);
+    }
+
+    /**
+     * 从 tx list 中获取 tx，生成 TransactionMessage
+     * @param queueName
+     * @param limitTime
+     * @param limitSize
+     * @return
+     */
+    public TransactionMessage genInstance(String queueName, double limitTime, double limitSize) {
+        RabbitmqUtil rmq = new RabbitmqUtil(queueName);
+        List<Transaction> txList = txDao.pull(queueName, limitTime, limitSize);
+        if (txList.size() > 0) {
+            return this.genInstance(txList);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -126,14 +148,14 @@ public class TransactionMessageService {
 
     /**
      * 进行签名和验证的 content
-     * @param transaction
+     * @param txList
      * @param timestamp
      * @param pubKey
      * @return
      */
-    public static String getSignContent(Transaction transaction, String timestamp, String pubKey) {
+    public static String getSignContent(List<Transaction> txList, String timestamp, String pubKey) {
         String msgType = Const.TXM;
-        return transaction.toString() +msgType + timestamp + pubKey;
+        return txList.toString() +msgType + timestamp + pubKey;
     }
 
     /**
@@ -142,7 +164,7 @@ public class TransactionMessageService {
      * @return
      */
     public static boolean verify(TransactionMessage txMsg) {
-        return SignatureUtil.verify(txMsg.getPubKey(), getSignContent(txMsg.getTransaction(), txMsg.getTimestamp(),
+        return SignatureUtil.verify(txMsg.getPubKey(), getSignContent(txMsg.getTxList(), txMsg.getTimestamp(),
                 txMsg.getPubKey()), txMsg.getSignature());
     }
 }

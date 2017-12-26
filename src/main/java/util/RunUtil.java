@@ -17,6 +17,7 @@ import java.util.List;
 public class RunUtil {
     private final static ObjectMapper objMapper = new ObjectMapper();
     private BlockService blockService = BlockService.getInstance();
+
     /**
      * 统计各个集合中记录的数量
      */
@@ -32,7 +33,7 @@ public class RunUtil {
         String blockChainCollection;
         String txCollection;
 
-        for (int port = 8000; port < 8004; port ++) {
+        for (int port = 8000; port < 8004; port++) {
             url = realIp + ":" + port;
             ppmCollection = url + "." + Const.PPM;
             pmCollection = url + "." + Const.PM;
@@ -63,10 +64,15 @@ public class RunUtil {
                     + ", blockIdCount: " + blockIdCount
                     + ", lastBlockId: " + lastBlockId);
         }
+        url = realIp + ":" + 9001;
+        String txIdCollectorColl = "TxIdCollector" + url + ".TxIds";
+        long txIdsCount = MongoUtil.countRecords(txIdCollectorColl);
+        System.out.println("txIdsCount: " + txIdsCount);
     }
 
     /**
      * 清空所有集合
+     *
      * @throws Exception
      */
     @Test
@@ -130,11 +136,11 @@ public class RunUtil {
     }
 
     @Test
-    public void countBlocks(){
+    public void countBlocks() {
         String realIp = NetUtil.getRealIp();
         String url;
         String blockChainCollection;
-        for (int port = 8000; port < 8004; port ++) {
+        for (int port = 8000; port < 8004; port++) {
             url = realIp + ":" + port;
             blockChainCollection = url + "." + Const.BLOCK_CHAIN;
             MongoUtil.findValuesByKey("blockId", blockChainCollection);

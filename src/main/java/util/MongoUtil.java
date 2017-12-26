@@ -3,9 +3,7 @@ package util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.*;
 import com.mongodb.client.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
 import entity.*;
 import org.bson.Document;
@@ -67,11 +65,12 @@ public class MongoUtil {
 
     /**
      * 根据 key，value，将 json 数据插入到名字为 collectionName 的 collection（表） 中
+     *
      * @param key
      * @param value
      * @param jsonStr
      * @param collectionName
-     * @param uniqueIndex 是否创建唯一索引
+     * @param uniqueIndex    是否创建唯一索引
      * @return
      */
     public static boolean upSertJson(String key, String value, String jsonStr, String collectionName, boolean uniqueIndex) {

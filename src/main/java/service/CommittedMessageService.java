@@ -11,6 +11,7 @@ import util.*;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static util.SignatureUtil.getSha256Base64;
@@ -84,13 +85,13 @@ public class CommittedMessageService {
             } else if (cliMsgType.equals(TransactionMessage.class.getSimpleName())) {
                 // 如果 clientMessage 引用的对象为 TransactionMessage 类型
                 TransactionMessage txMessage = (TransactionMessage) clientMessage;
-                Transaction transaction = txMessage.getTransaction();
-                if (txService.save(transaction, txCollection)) {
-                    String txId = transaction.getTxId();
-                    logger.info("交易" + txId + " 存入成功");
+                List<Transaction> txList = txMessage.getTxList();
+                if (txService.saveBatch(txList, txCollection)) {
+                    List<String> txIdList = txService.getTxIdList(txList);
+                    logger.info("交易 :" + txIdList + " 存入成功");
 
                     // 验证成功的 tx 发送到 TxIdCollector 服务器上
-                    TxIdMessage txIdMsg = timSrv.genInstance(txId, realIp, localPort);
+                    TxIdMessage txIdMsg = timSrv.genInstance(txIdList, realIp, localPort);
                     netService.sendMsg(txIdMsg.toString(), txIdCollectorAddr.getIp(), txIdCollectorAddr.getPort());
                 }
             } else {
