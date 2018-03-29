@@ -22,7 +22,7 @@ public class ClientFrontEnd {
     public static void connValidators() {
 
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
-                newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+                newCachedThreadPool();
         List<NetAddress> list = getValidatorAddressList(BlockChainNodesFile);
         NetAddress va = null;
         for(int index=0; index < list.size(); index++) {

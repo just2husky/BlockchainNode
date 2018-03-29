@@ -1,6 +1,7 @@
 package dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.UpdateResult;
@@ -27,7 +28,10 @@ public class TransactionDao {
     private static class LazyHolder {
         private static final TransactionDao INSTANCE = new TransactionDao();
     }
-    private TransactionDao (){}
+
+    private TransactionDao() {
+    }
+
     public static TransactionDao getInstance() {
         return LazyHolder.INSTANCE;
     }
@@ -82,17 +86,26 @@ public class TransactionDao {
         Bson filter = null;
         UpdateOptions options = new UpdateOptions().upsert(true);
         List<WriteModel<Document>> updates = new ArrayList<WriteModel<Document>>();
+
         for (Transaction tx : txList) {
-            update = new Document("$set", Document.parse(tx.toString()));
-            filter = Filters.eq(key, tx.getTxId());
-            updates.add(new UpdateOneModel<Document>(filter, update, options));
+            try {
+                update = new Document("$set", Document.parse(tx.toString()));
+                filter = Filters.eq(key, tx.getTxId());
+                updates.add(new UpdateOneModel<Document>(filter, update, options));
+            } catch (MongoBulkWriteException exp) {
+                logger.warn(exp.getMessage());
+            }
         }
+
         com.mongodb.bulk.BulkWriteResult bulkWriteResult = collection.bulkWrite(updates);
         return bulkWriteResult.wasAcknowledged();
+
+
     }
 
     /**
      * 从消息队列 queueName 中获取 Transaction，若失败则返回 null
+     *
      * @param queueName
      * @return
      */
@@ -115,7 +128,7 @@ public class TransactionDao {
         List<Transaction> txList = new ArrayList<Transaction>();
         for (String content : pullContent) {
             // 判断 json 是 tx 对象还是 tx list
-            if(JsonUtil.isList(content)) {
+            if (JsonUtil.isList(content)) {
                 for (Transaction tx : JsonUtil.str2list(content, Transaction.class)) {
                     if (tx != null) {
                         txList.add(tx);
@@ -138,6 +151,7 @@ public class TransactionDao {
 
     /**
      * 将 tx push 到 消息队列 queueName 上
+     *
      * @param tx
      * @param queueName
      */
@@ -148,6 +162,7 @@ public class TransactionDao {
 
     /**
      * 判断 key = value 的文档是否存在与 collectionName 中
+     *
      * @param key
      * @param value
      * @param collectionName

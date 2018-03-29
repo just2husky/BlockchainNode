@@ -26,8 +26,8 @@ public class ValidatorServer implements Runnable
     public ValidatorServer(int port, int poolSize) throws IOException
     {
         serverSocket = new ServerSocket(port);
-        threadPool = Executors.newFixedThreadPool(poolSize);
-        pdmhPool = Executors.newFixedThreadPool(poolSize);
+        threadPool = Executors.newCachedThreadPool();
+        pdmhPool = Executors.newCachedThreadPool();
 //        serverSocket.setSoTimeout(100000);
     }
 

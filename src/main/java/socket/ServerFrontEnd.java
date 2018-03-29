@@ -28,7 +28,7 @@ public class ServerFrontEnd {
         logger.info("当前节点可用处理器数量为：" + availableProcessors);
 
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
-                newFixedThreadPool(availableProcessors);
+                newCachedThreadPool();
         logger.info("availableProcessors: " + availableProcessors);
         for (NetAddress va : netAddressList) {
             try {

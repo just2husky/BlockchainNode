@@ -27,7 +27,7 @@ public class LastBlockIdPublisher implements Runnable {
 
     public LastBlockIdPublisher(int port, int poolSize) throws IOException {
         this.serverSocket = new ServerSocket(port);
-        this.threadPool = Executors.newFixedThreadPool(poolSize);
+        this.threadPool = Executors.newCachedThreadPool();
     }
 
     @Override
