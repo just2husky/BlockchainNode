@@ -96,10 +96,13 @@ public class TransactionDao {
                 logger.warn(exp.getMessage());
             }
         }
-
-        com.mongodb.bulk.BulkWriteResult bulkWriteResult = collection.bulkWrite(updates);
-        return bulkWriteResult.wasAcknowledged();
-
+        try {
+            com.mongodb.bulk.BulkWriteResult bulkWriteResult = collection.bulkWrite(updates);
+            return bulkWriteResult.wasAcknowledged();
+        } catch (MongoBulkWriteException exp) {
+            logger.warn(exp.getMessage());
+            return false;
+        }
 
     }
 

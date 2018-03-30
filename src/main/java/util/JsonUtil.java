@@ -98,6 +98,23 @@ public class JsonUtil {
     }
 
     /**
+     * 从指定路径读取json文件，解析后返回 BlockerAddress list
+     *
+     * @return
+     */
+    public static List<NetAddress> getBlockerAddressList(String jsonFile) {
+        String jsonStr = getStrByJsonFile(jsonFile);
+        Map map = jsonToMap(jsonStr);
+        //noinspection unchecked
+        List<Map> list = (List<Map>) map.get("blockers");
+        List<NetAddress> addrList = new ArrayList<NetAddress>();
+        for(Map tmpMap : list) {
+            addrList.add(new NetAddress((String)tmpMap.get("ip"), (Integer) tmpMap.get("port")));
+        }
+        return addrList;
+    }
+
+    /**
      * 获取 Publisher 的地址
      * @param jsonFile
      * @return

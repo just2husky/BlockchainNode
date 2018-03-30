@@ -43,6 +43,7 @@ public class RunUtil {
             blockChainCollection = url + "." + Const.BLOCK_CHAIN;
             txCollection = url + "." + Const.TX;
             String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
+            String txIdCollectorColl = "TxIdCollector" + realIp + ":" + (port + 1000) + ".TxIds";
 
             long ppmCount = MongoUtil.countRecords(ppmCollection);
             long pmCount = MongoUtil.countRecords(pmCollection);
@@ -52,6 +53,7 @@ public class RunUtil {
             long blockChainCount = MongoUtil.countRecords(blockChainCollection);
             long txCount = MongoUtil.countRecords(txCollection);
             int blockIdCount = MongoUtil.countValuesByKey("blockId", blockChainCollection);
+            long txIdsCount = MongoUtil.countRecords(txIdCollectorColl);
             String lastBlockId = blockService.getLastBlockId(lbiCollection);
 
             System.out.println("主机 [ " + url + " ] < ppmCount: " + ppmCount
@@ -62,12 +64,9 @@ public class RunUtil {
                     + ", blockChainCount: " + blockChainCount
                     + ", txCount: " + txCount
                     + ", blockIdCount: " + blockIdCount
+                    + ", txIdsCount: " + txIdsCount
                     + ", lastBlockId: " + lastBlockId);
         }
-        url = realIp + ":" + 9001;
-        String txIdCollectorColl = "TxIdCollector" + url + ".TxIds";
-        long txIdsCount = MongoUtil.countRecords(txIdCollectorColl);
-        System.out.println("txIdsCount: " + txIdsCount);
     }
 
     /**

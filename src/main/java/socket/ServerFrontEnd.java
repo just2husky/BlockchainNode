@@ -33,7 +33,7 @@ public class ServerFrontEnd {
         for (NetAddress va : netAddressList) {
             try {
                 logger.info("开始启动端口为[" + va.getPort() + "]的 Validator");
-                es.execute(new ValidatorServer(va.getPort(), availableProcessors));
+                es.execute(new ValidatorServer(va.getPort()));
             } catch (IOException e) {
                 e.printStackTrace();
             }

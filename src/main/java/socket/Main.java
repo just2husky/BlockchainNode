@@ -28,10 +28,9 @@ public class Main {
     }
 
     public static void startTransactionIdCollector(){
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
         NetAddress na = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
         try {
-            new Thread(new TransactionIdCollector(na.getPort(), availableProcessors)).start();
+            new Thread(new TransactionIdCollector(na.getPort())).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

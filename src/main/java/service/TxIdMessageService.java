@@ -40,19 +40,14 @@ public class TxIdMessageService {
         if (verifyRes) {
             // 2. 保存接收到的 TxIdMessage
             if (this.save(tim, timCollection)) {
-                // 满足接收到 2f + 1 个来自不同节点的 TxId消息
-                String treeHash = tim.getTreeHash();
-                if (2 * PeerUtil.getFaultCount() + 1 <= this.count(treeHash, timCollection)) {
-                    List<String> txIdList = tim.getTxIdList();
-                    synchronized (this) {
-                        if (!txSrv.allExited(txIdList, txIdCollection)) {
-                            if (txIdSrv.upSertBatch(txIdSrv.genInstances(tim), txIdCollection)) {
-                                txIdSrv.addTxIdsToQueue(txIdList);
-                                logger.info("发送 tx id [" + txIdList + "] 到 " + Const.TX_ID_QUEUE);
-                            }
-                        } else {
-                            logger.debug("txId: " + txIdList + " 已存在集合 " + txIdCollection + " 中");
+                List<String> txIdList = tim.getTxIdList();
+                synchronized (this) {
+                    if (!txSrv.allExited(txIdList, txIdCollection)) {
+                        if (txIdSrv.upSertBatch(txIdSrv.genInstances(tim), txIdCollection)) {
+                            logger.info("保存 tx id list 成功");
                         }
+                    } else {
+                        logger.debug("txId: " + txIdList + " 已存在集合 " + txIdCollection + " 中");
                     }
                 }
             } else {

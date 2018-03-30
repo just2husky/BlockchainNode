@@ -55,7 +55,7 @@ public class BlockDao {
         try {
             updateResult = collection.updateOne(filter, update, options);
         } catch (com.mongodb.MongoWriteException e) {
-            logger.error(e.getMessage());
+            logger.warn(e.getMessage());
         }
 
         return updateResult != null && updateResult.wasAcknowledged();

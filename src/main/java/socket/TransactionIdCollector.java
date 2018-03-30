@@ -21,7 +21,7 @@ public class TransactionIdCollector implements Runnable {
     private final ServerSocket serverSocket;
     private final ExecutorService threadPool;
 
-    public TransactionIdCollector(int port, int poolSize) throws IOException {
+    public TransactionIdCollector(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
         this.threadPool = Executors.newCachedThreadPool();
     }
@@ -41,10 +41,9 @@ public class TransactionIdCollector implements Runnable {
     }
 
     public static void main(String[] args) {
-        int availableProcessors = Runtime.getRuntime().availableProcessors();
         NetAddress na = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
         try {
-            new Thread(new TransactionIdCollector(na.getPort(), availableProcessors)).start();
+            new Thread(new TransactionIdCollector(na.getPort())).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

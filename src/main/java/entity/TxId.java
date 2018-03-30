@@ -9,14 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TxId {
     private String txId;
     // 是否被发送到 Blocker
-    private boolean sended;
+    private boolean inBlock;
 
     public TxId() {
     }
 
-    public TxId(String txId, boolean sended) {
+    public TxId(String txId, boolean inBlock) {
         this.txId = txId;
-        this.sended = sended;
+        this.inBlock = inBlock;
     }
 
     @Override
@@ -38,11 +38,11 @@ public class TxId {
         this.txId = txId;
     }
 
-    public boolean isSended() {
-        return sended;
+    public boolean isInBlock() {
+        return inBlock;
     }
 
-    public void setSended(boolean sended) {
-        this.sended = sended;
+    public void setInBlock(boolean inBlock) {
+        this.inBlock = inBlock;
     }
 }

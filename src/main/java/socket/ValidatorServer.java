@@ -23,11 +23,24 @@ public class ValidatorServer implements Runnable
     private final ExecutorService threadPool;
     private final ExecutorService pdmhPool;
 
-    public ValidatorServer(int port, int poolSize) throws IOException
+    public ValidatorServer(int port) throws IOException
     {
         serverSocket = new ServerSocket(port);
         threadPool = Executors.newCachedThreadPool();
         pdmhPool = Executors.newCachedThreadPool();
+//        serverSocket.setSoTimeout(100000);
+    }
+
+    /**
+     * 保留 poolSize 是为了使用 newFixedThreadPool
+     * @param port
+     * @param poolSize
+     * @throws IOException
+     */
+    public ValidatorServer(int port, int poolSize) throws IOException {
+        serverSocket = new ServerSocket(port);
+        threadPool = Executors.newFixedThreadPool(poolSize);
+        pdmhPool = Executors.newFixedThreadPool(poolSize);
 //        serverSocket.setSoTimeout(100000);
     }
 
@@ -57,7 +70,7 @@ public class ValidatorServer implements Runnable
         int port = 8000;
         try
         {
-            Thread t = new Thread(new ValidatorServer(port, Runtime.getRuntime().availableProcessors()));
+            Thread t = new Thread(new ValidatorServer(port));
             t.start();
         }catch(IOException e)
         {

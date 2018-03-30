@@ -56,7 +56,8 @@ public class CommittedMessageService {
         String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
         String cliMsgType = clientMessage.getClass().getSimpleName();
         NetAddress publisherAddr = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
-        NetAddress txIdCollectorAddr = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
+        // TODO
+        NetAddress txIdCollectorAddr = new NetAddress("127.0.0.1", localPort+1000);
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
             logger.info("将 CommittedMessage [" + cmtdMsg.toString() + "] 存入数据库");
@@ -72,15 +73,15 @@ public class CommittedMessageService {
                         logger.info("Last block Id: " + blockId + " 更新成功");
 
                         // 验证成功的 tx 发送到 LastBlockPublisher 服务器上
-                        LastBlockIdMessage lbMsg = lbmService.genInstance(blockId, block.getPreBlockId(), realIp, localPort);
-                        netService.sendMsg(lbMsg.toString(), publisherAddr.getIp(), publisherAddr.getPort());
+                        LastBlockIdMessage lbiMsg = lbmService.genInstance(blockId, block.getPreBlockId(), realIp, localPort);
+                        netService.sendMsg(lbiMsg.toString(), publisherAddr.getIp(), publisherAddr.getPort());
 //                            new NettyClient(publisherAddr.getIp(), publisherAddr.getPort()).start(lbMsg.toString());
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");
                     }
 
                 } else {
-                    logger.error("区块 " + block.getBlockId() + " 存入失败");
+                    logger.warn("区块 " + block.getBlockId() + " 存入失败");
                 }
             } else if (cliMsgType.equals(TransactionMessage.class.getSimpleName())) {
                 // 如果 clientMessage 引用的对象为 TransactionMessage 类型
