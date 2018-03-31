@@ -136,6 +136,40 @@ public class MongoUtil {
     }
 
     /**
+     * 根据字段查找到某条记录，并修改其他字段
+     * @param searchKey
+     * @param searchValue
+     * @param upKey
+     * @param upValue
+     * @param collectionName
+     * @return
+     */
+    public static boolean update(String searchKey, String searchValue, String upKey, String upValue,
+                                 String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        UpdateResult updateResult = collection.updateMany(eq(searchKey, searchValue),
+                new Document("$set", new Document(upKey, upValue)));
+        return updateResult.wasAcknowledged();
+    }
+
+    /**
+     * 根据字段查找到某条记录，并修改其他字段， 字段类型为 boolean
+     * @param searchKey
+     * @param searchValue
+     * @param upKey
+     * @param upValue
+     * @param collectionName
+     * @return
+     */
+    public static boolean update(String searchKey, String searchValue, String upKey, Boolean upValue,
+                                 String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        UpdateResult updateResult = collection.updateMany(eq(searchKey, searchValue),
+                new Document("$set", new Document(upKey, upValue)));
+        return updateResult.wasAcknowledged();
+    }
+
+    /**
      * 判断 collectionName 是否存在
      *
      * @param collectionName
@@ -198,6 +232,32 @@ public class MongoUtil {
             record = mongoCursor.next().toJson();
             list.add(record);
             logger.debug("record: " + record);
+        }
+        return list;
+    }
+
+    public static List<String> find(String collectionName, double limitSize) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        FindIterable<Document> findIterable = collection.find(eq("inBlock", false))
+                .sort(ascending("_id"));
+
+        MongoCursor<Document> mongoCursor = findIterable.iterator();
+        List<String> list = new ArrayList<String>();
+        long totalLen = 0;
+        TxId txId;
+        while (mongoCursor.hasNext()) {
+            try {
+                txId = objectMapper.readValue(mongoCursor.next().toJson(), TxId.class);
+                totalLen += txId.getTxId().length();
+                if (totalLen / Math.pow(1024, 2) <= limitSize) {
+                    list.add(txId.getTxId());
+                } else {
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
         return list;
     }

@@ -57,7 +57,7 @@ public class CommittedMessageService {
         String cliMsgType = clientMessage.getClass().getSimpleName();
         NetAddress publisherAddr = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
         // TODO
-        NetAddress txIdCollectorAddr = new NetAddress("127.0.0.1", localPort+1000);
+        NetAddress blockerAddr = new NetAddress("127.0.0.1", localPort+1000);
 
         if (this.save(cmtdMsg, cmtdMsgCollection)) {
             logger.info("将 CommittedMessage [" + cmtdMsg.toString() + "] 存入数据库");
@@ -72,9 +72,8 @@ public class CommittedMessageService {
                     if(blockService.updateLastBlockId(blockId , lbiCollection)) {
                         logger.info("Last block Id: " + blockId + " 更新成功");
 
-                        // 验证成功的 tx 发送到 LastBlockPublisher 服务器上
-                        LastBlockIdMessage lbiMsg = lbmService.genInstance(blockId, block.getPreBlockId(), realIp, localPort);
-                        netService.sendMsg(lbiMsg.toString(), publisherAddr.getIp(), publisherAddr.getPort());
+                        // 验证成功的 block 发送到 Blocker 服务器上
+                        netService.sendMsg(blockMessage.toString(), blockerAddr.getIp(), blockerAddr.getPort());
 //                            new NettyClient(publisherAddr.getIp(), publisherAddr.getPort()).start(lbMsg.toString());
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");
@@ -93,7 +92,7 @@ public class CommittedMessageService {
 
                     // 验证成功的 tx 发送到 TxIdCollector 服务器上
                     TxIdMessage txIdMsg = timSrv.genInstance(txIdList, realIp, localPort);
-                    netService.sendMsg(txIdMsg.toString(), txIdCollectorAddr.getIp(), txIdCollectorAddr.getPort());
+                    netService.sendMsg(txIdMsg.toString(), blockerAddr.getIp(), blockerAddr.getPort());
                 }
             } else {
                 logger.error("clientMessage的类型为：" + clientMessage.getClass().getSimpleName());

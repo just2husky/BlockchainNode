@@ -1,15 +1,14 @@
 package service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import entity.Block;
-import entity.BlockMessage;
-import entity.PrePrepareMessage;
+import entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.*;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.List;
 
 import static service.MessageService.updateSeqNum;
 import static util.SignatureUtil.getSha256Base64;
@@ -22,6 +21,18 @@ import static util.SignatureUtil.loadPvtKey;
 public class BlockMessageService {
     private final static Logger logger = LoggerFactory.getLogger(BlockMessageService.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
+
+    private TxIdService tis = TxIdService.getInstance();
+    private BlockService blockService = BlockService.getInstance();
+    private BlockerService blockerService = BlockerService.getInstance();
+
+    private static class LazyHolder {
+        private static final BlockMessageService INSTANCE = new BlockMessageService();
+    }
+    private BlockMessageService (){}
+    public static BlockMessageService getInstance() {
+        return LazyHolder.INSTANCE;
+    }
 
     /**
      * 处理客户端发送的消息
@@ -52,6 +63,51 @@ public class BlockMessageService {
 
         // 4. 主节点向其他备份节点广播 PrePrepareMessage
         NetService.broadcastMsg(NetUtil.getRealIp(), localPort, objectMapper.writeValueAsString(ppm));
+    }
+
+    /**
+     * 处理从 Validator 发往 Blocker 的 BlockMessage
+     * @param blockMsg
+     * @param netAddr
+     * @throws Exception
+     */
+    public void procBlockerBlockMsg(BlockMessage blockMsg, NetAddress netAddr) throws Exception {
+        String url = netAddr.toString();
+        String blockMsgCollection = url + "." + Const.BM;
+        String txIdCollection = url + "." + Const.TIM;
+        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
+        String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
+
+        // 1. 将从客户端收到的 Block Message 存入到集合中
+        if(BlockMessageService.save(blockMsg, blockMsgCollection)) {
+            logger.info("Block Message 存入成功");
+            Block block = blockMsg.getBlock();
+            String blockId = block.getBlockId();
+            if (blockService.save(block, blockChainCollection)) {
+                logger.info("区块 " + blockId + " 存入成功");
+                if (blockService.updateLastBlockId(blockId, lbiCollection)) {
+                    logger.info("Last block Id: " + blockId + " 更新成功");
+
+                } else {
+                    logger.error("Last block Id: " + blockId + " 更新失败");
+                }
+            }
+        } else {
+            logger.info("Block Message 已存在");
+        }
+
+        // 2. 根据 block 中的 TxId，将 txIdCollection 中的相应 TxId 的 InBLock 为设为 true
+        for (String txId : blockMsg.getBlock().getTxIdList()) {
+            tis.setTrue(txId, txIdCollection);
+        }
+
+        // 3. 检查是否学要自己生成区块
+        long blockLength = MongoUtil.countRecords(blockChainCollection);
+        if(blockerService.isCurrentBlocker(netAddr, blockLength)) {
+            // 如果下一个区块由url为netAddr的block生成，则生成 block，并发送给主节点
+
+        }
+
     }
 
     /**

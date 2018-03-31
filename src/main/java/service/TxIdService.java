@@ -89,4 +89,22 @@ public class TxIdService {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_ID_QUEUE);
         rmq.push(txIdList);
     }
+
+    /**
+     * 将 inBLock 字段设为 true
+     * @param txId
+     * @param collectionName
+     */
+    public void setTrue(String txId, String collectionName) {
+        MongoUtil.update("txId", txId, "inBlock", true, collectionName);
+    }
+
+    /**
+     * 将 inBLock 字段设为 false
+     * @param txId
+     * @param collectionName
+     */
+    public void setFalse(String txId, String collectionName) {
+        MongoUtil.update("txId", txId, "inBlock", false, collectionName);
+    }
 }

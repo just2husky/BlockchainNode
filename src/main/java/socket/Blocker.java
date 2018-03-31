@@ -105,7 +105,7 @@ public class Blocker implements Runnable {
         for (NetAddress tic : netAddressList) {
             try {
                 logger.info("开始启动端口为[" + tic.getPort() + "]的 TxIdCollector");
-                es.execute(new TransactionIdCollector(tic.getPort()));
+                es.execute(new BlockerServer(tic));
             } catch (IOException e) {
                 e.printStackTrace();
             }

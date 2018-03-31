@@ -1,6 +1,8 @@
 package handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.BlockMessage;
+import entity.LastBlockIdMessage;
 import entity.Message;
 import entity.TxIdMessage;
 import org.slf4j.Logger;
@@ -17,13 +19,13 @@ import java.net.Socket;
 /**
  * Created by chao on 2017/12/25.
  */
-public class TxIdCollectorHandler implements Runnable {
+public class BlockerServerHandler implements Runnable {
     private final Socket socket;
-    private final static Logger logger = LoggerFactory.getLogger(TxIdCollectorHandler.class);
+    private final static Logger logger = LoggerFactory.getLogger(BlockerServerHandler.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TxIdMessageService timSrv = TxIdMessageService.getInstance();
 
-    public TxIdCollectorHandler(Socket socket) {
+    public BlockerServerHandler(Socket socket) {
         this.socket = socket;
     }
 
@@ -49,7 +51,14 @@ public class TxIdCollectorHandler implements Runnable {
                 socket.close();
                 timSrv.procTxIdMsg(tim, timCollection, txIdCollection);
                 logger.info("完成对[" + msgType + "] msg: " + tim.getMsgId() + " 的处理");
-            } else {
+            } else if (msgType.equals(Const.BM)) {
+                BlockMessage blockMsg = (BlockMessage) myMsg;
+                out.writeUTF("接收到你的 BlockMessage： " + blockMsg.getMsgId());
+                out.flush();
+                socket.close();
+
+            } else
+            {
                 logger.error("服务器接收到尚不能处理类型的 msg: " + rcvMsg);
                 out.writeUTF("服务器接收到尚不能处理类型的 msg: " + rcvMsg);
                 out.flush();

@@ -1,11 +1,13 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Created by chao on 2017/12/25.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TxId {
     private String txId;
     // 是否被发送到 Blocker

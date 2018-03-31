@@ -1,7 +1,7 @@
 package socket;
 
 import entity.NetAddress;
-import handler.TxIdCollectorHandler;
+import handler.BlockerServerHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.Const;
@@ -15,14 +15,17 @@ import java.util.concurrent.Executors;
 
 /**
  * Created by chao on 2017/12/25.
+ * blocker server 服务器，用以接收 Validator 发送来的消息并进行处理
  */
-public class TransactionIdCollector implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger(TransactionIdCollector.class);
+public class BlockerServer implements Runnable {
+    private final static Logger logger = LoggerFactory.getLogger(BlockerServer.class);
     private final ServerSocket serverSocket;
     private final ExecutorService threadPool;
+    private NetAddress netAddr;
 
-    public TransactionIdCollector(int port) throws IOException {
-        this.serverSocket = new ServerSocket(port);
+    public BlockerServer(NetAddress netAddr) throws IOException {
+        this.netAddr = netAddr;
+        this.serverSocket = new ServerSocket(netAddr.getPort());
         this.threadPool = Executors.newCachedThreadPool();
     }
 
@@ -30,9 +33,9 @@ public class TransactionIdCollector implements Runnable {
     public void run() {
         String url = NetUtil.getRealIp() + ":" + serverSocket.getLocalPort();
         try {
-            logger.info("启动 TransactionIdCollector 服务器 " + url);
+            logger.info("启动 BlockerServer 服务器 " + url);
             while (true) {
-                threadPool.execute(new TxIdCollectorHandler(serverSocket.accept()));
+                threadPool.execute(new BlockerServerHandler(serverSocket.accept()));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,7 +46,7 @@ public class TransactionIdCollector implements Runnable {
     public static void main(String[] args) {
         NetAddress na = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
         try {
-            new Thread(new TransactionIdCollector(na.getPort())).start();
+            new Thread(new BlockerServer(na)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

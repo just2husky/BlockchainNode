@@ -37,9 +37,24 @@ public class NetAddress {
 
     @Override
     public String toString() {
-        return "NetAddress{" +
-                "ip='" + ip + '\'' +
-                ", port='" + port + '\'' +
-                '}';
+        return ip + ":" + port;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NetAddress that = (NetAddress) o;
+
+        if (port != that.port) return false;
+        return ip.equals(that.ip);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = ip.hashCode();
+        result = 31 * result + port;
+        return result;
     }
 }

@@ -3,9 +3,12 @@ package util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.CommittedMessage;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import service.TransactionService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,6 +16,7 @@ import java.util.Map;
  */
 public class MongoUtilTest {
     private ObjectMapper objectMapper = new ObjectMapper();
+    private final static Logger logger = LoggerFactory.getLogger(MongoUtil.class);
     @Test
     public void upSertJson() throws Exception {
         String cmtdmStr = "{\"msgType\":\"CommittedMsg\",\"msgId\":\"ylnT4cxqunxpqdoDc61V9hEtzmksDZwwmJ6W082GZvs=\",\"msgType\":\"CommittedMsg\",\"timestamp\":\"1513652580955\",\"pubKey\":\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKp7wRlLhTDte3wC4Sd7pj42fBCMtNmUQ8cRsSTkY6Pw+qPuytjn4455A6/p7xOHJO8RIO9TRrGLLAnFJGHoZqg==\",\"signature\":\"MEUCIQCvEOXX90YcX7Iwcdd2C4XcUzvoJdwnDtjOYyCGSo2J5wIgUh0vtxTNwXn8xWrA03EOQU3YEsQ7sKDZF0kqHPOvNOw=\",\"cliMsgId\":\"aM6HTB9Z67sJoB2p+VKIOyiWFxL/UQX68LAZ7NJfGl0=\",\"viewId\":\"1\",\"seqNum\":\"11\",\"ip\":\"202.115.52.239\",\"port\":8003}";
@@ -119,4 +123,22 @@ public class MongoUtilTest {
         MongoUtil.insertJson(jsonStr, "test");
     }
 
+    @Test
+    public void update() {
+        String searchKey= "txId";
+        String searchValue="6EPYnRIPgsf8SbxiBqWuXxogbRS1wE3xzBJogXC3CLE=";
+        String upKey= "inBlock";
+        boolean upValue = true;
+        String collectionName = "TxIdCollector202.115.53.194:9000.TxIds";
+        MongoUtil.update(searchKey, searchValue, upKey, upValue, collectionName);
+    }
+
+    @Test
+    public void find() {
+        double limitSize = 88 / 1024.0/1024;
+        List<String> list = MongoUtil.find("TxIdCollector202.115.53.194:9003.TxIds", limitSize);
+        for(String txId : list) {
+            System.out.println(txId);
+        }
+    }
 }

@@ -30,7 +30,7 @@ public class Main {
     public static void startTransactionIdCollector(){
         NetAddress na = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
         try {
-            new Thread(new TransactionIdCollector(na.getPort())).start();
+            new Thread(new BlockerServer(na)).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
