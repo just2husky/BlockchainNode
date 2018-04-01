@@ -49,13 +49,14 @@ public class BlockerServer implements Runnable {
      * 根据 netAddressList 启动对应端口的 TxIdCollector
      * @param netAddressList TxIdCollectorAddress 对象 list
      */
-    public static void startBlockers(List<NetAddress> netAddressList) {
+    public static void startBlockerServers(List<NetAddress> netAddressList) {
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newCachedThreadPool();
         for (NetAddress tic : netAddressList) {
             try {
-                logger.info("开始启动端口为[" + tic.getPort() + "]的 Blocker");
+                logger.info("开始启动端口为[" + tic.getPort() + "]的 Blocker Server");
                 es.execute(new BlockerServer(tic));
+                es.execute(new Blocker(tic));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -67,6 +68,6 @@ public class BlockerServer implements Runnable {
     public static void main(String[] args) {
         List<NetAddress> blockerList = JsonUtil.getBlockerAddressList(Const.BlockChainNodesFile);
         logger.info("Blocker 地址 list 为：" + blockerList);
-        startBlockers(blockerList);
+        startBlockerServers(blockerList);
     }
 }

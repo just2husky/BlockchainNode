@@ -100,28 +100,6 @@ public class BlockMessageService {
             tis.setTrue(txId, txIdCollection);
         }
 
-        // 3. 检查是否学要自己生成区块
-        long blockLength = MongoUtil.countRecords(blockChainCollection);
-        if(blockerService.isCurrentBlocker(netAddr, blockLength)) {
-            // 如果下一个区块由url为netAddr的block生成，则生成 block，并发送给主节点
-            String lastBlockId = blockService.getLastBlockId(lbiCollection);
-            Block block = blockService.genBlock(lastBlockId, txIdCollection, Const.TX_ID_LIST_SIZE);
-            if(block != null)
-                this.sendBlock(block, NetUtil.getPrimaryNode());
-            else {
-                logger.info("目前没有可以打包的TxId");
-            }
-        }
-
-    }
-
-    public void sendBlock(Block block, NetAddress netAddr) {
-        logger.info("开始向 [" + netAddr.getIp() + ":" + netAddr.getPort() + "] 发送 block: " + block.getBlockId());
-        BlockMessage blockMessage = BlockMessageService.genInstance(block);
-        logger.info("blockMessage in send block: " + blockMessage);
-        String rcvMsg = netService.sendMsg(blockMessage.toString(), netAddr.getIp(),
-                netAddr.getPort(), Const.TIME_OUT);
-        logger.info("服务器响应： " + rcvMsg);
     }
 
     /**

@@ -1,16 +1,19 @@
 package socket;
 
 import entity.Block;
+import entity.BlockMessage;
 import entity.NetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.BlockMessageService;
 import service.BlockService;
+import service.BlockerService;
 import service.NetService;
 import util.Const;
 import util.JsonUtil;
+import util.MongoUtil;
+import util.NetUtil;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,65 +24,58 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class Blocker implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(Blocker.class);
-    private NetService netService = NetService.getInstance();
+    private BlockerService blockerService = BlockerService.getInstance();
     private BlockService blockService = BlockService.getInstance();
-    private long timeInterval; //生成区块并发送的频率
-    private int timeout; // Blocker 连接 Validator 的超时时间
-    private String pbiPublisherIP;
-    private int pbiPublisherPort;
+    private NetService netService = NetService.getInstance();
 
-    private int port;
+    private long timeInterval; //生成区块并发送的频率
+    private double blockSize;
+    private int timeout; // Blocker 连接 Validator 的超时时间
+
+    private NetAddress blockerAddr;
 
     public Blocker() {
-        this.timeInterval = 1000;
+        this.timeInterval = 5000;
+        this.blockSize = Const.TX_ID_LIST_SIZE;
         this.timeout = 5000;
-        NetAddress na = JsonUtil.getPublisherAddress(Const.BlockChainNodesFile);
-        this.pbiPublisherIP = na.getIp();
-        this.pbiPublisherPort = na.getPort();
     }
 
-    public Blocker(int port) {
-        // 生成区块的间隔时间
-        this.timeInterval = 1000;
-        // Blocker启动的端口
-        this.port = port;
-    }
-
-    public Blocker(String pbiPublisherIP, int pbiPublisherPort) {
-        this.pbiPublisherIP = pbiPublisherIP;
-        this.pbiPublisherPort = pbiPublisherPort;
-    }
-
-    public Blocker(long timeInterval, int timeout, String pbiPublisherIP, int pbiPublisherPort) {
-        this.timeInterval = timeInterval;
-        this.timeout = timeout;
-        this.pbiPublisherIP = pbiPublisherIP;
-        this.pbiPublisherPort = pbiPublisherPort;
+    public Blocker(NetAddress blockerAddr) {
+        this.timeInterval = 5000;
+        this.blockSize = Const.TX_ID_LIST_SIZE;
+        this.timeout = 5000;
+        this.blockerAddr = blockerAddr;
     }
 
     public void run() {
-        String queueName = Const.TX_ID_QUEUE;
-        String lastBlockId = null;
-        double limitTime = 10000; // 单位毫秒
-        double limitSize = 20 / 1024.0; // 单位 MB
+        logger.info("Blocker [" + blockerAddr + "] 启动");
+        String lastBlockId;
         Block block;
+        long blockLength;
+
+        String blockChainCollection = blockerAddr + "." + Const.BLOCK_CHAIN;
+        String lbiCollection = blockerAddr + "." + Const.LAST_BLOCK_ID;
+        String txIdCollection = blockerAddr + "." + Const.TX_ID;
+
         while (true) {
-            logger.info("正在获取 last block id ...");
-            while (true) {
-                lastBlockId = blockService.getLastBlockIdFromQueue();
-                if(lastBlockId != null)
-                    break;
-            }
-            logger.info("获得 last block id [" + lastBlockId + "]");
-//            logger.info("正在生成 last block id 为 [" + lastBlockId + "] 的 block ...");
-            while (true) {
-                block = blockService.genBlock(lastBlockId, queueName, limitTime, limitSize);
-                if (block != null) {
-                    logger.info("生成 block：" + block.getBlockId());
-                    sendBlock(block);
-                    break;
+            blockLength = MongoUtil.countRecords(blockChainCollection);
+            if (blockLength > 0) {
+                if (blockerService.isCurrentBlocker(blockerAddr, blockLength)) {
+                    logger.info("Blocker [" + blockerAddr + "] 开始生成区块，当前区块链长度为" + blockLength);
+                    lastBlockId = blockService.getLastBlockId(lbiCollection);
+                    block = blockService.genBlock(lastBlockId, txIdCollection, this.blockSize);
+                    if (block != null) {
+                        logger.info("生产成区块： " + block.getBlockId());
+                        this.sendBlock(block, NetUtil.getPrimaryNode());
+                    } else {
+                        logger.info("目前没有可以打包的TxId");
+                    }
                 }
+
+            } else {
+                logger.info("区块链长度为" + blockLength);
             }
+
             try {
                 Thread.sleep(timeInterval);
             } catch (InterruptedException e) {
@@ -88,10 +84,17 @@ public class Blocker implements Runnable {
         }
     }
 
-    public void sendBlock(Block block) {
-        logger.info("开始向 [" + pbiPublisherIP + ":" + pbiPublisherPort + "] 发送 block: " + block.getBlockId());
-        String rcvMsg = netService.sendMsg(BlockMessageService.genInstance(block).toString(), pbiPublisherIP,
-                pbiPublisherPort, timeout);
+    /**
+     * 发送区块 block 到 netAddr 主机
+     * @param block
+     * @param netAddr
+     */
+    public void sendBlock(Block block, NetAddress netAddr) {
+        logger.info("开始向 [" + netAddr.getIp() + ":" + netAddr.getPort() + "] 发送 block: " + block.getBlockId());
+        BlockMessage blockMessage = BlockMessageService.genInstance(block);
+        logger.info("blockMessage in send block: " + blockMessage);
+        String rcvMsg = netService.sendMsg(blockMessage.toString(), netAddr.getIp(),
+                netAddr.getPort(), Const.TIME_OUT);
         logger.info("服务器响应： " + rcvMsg);
     }
 
@@ -99,26 +102,21 @@ public class Blocker implements Runnable {
      * 根据 netAddressList 启动对应端口的 TxIdCollector
      * @param netAddressList TxIdCollectorAddress 对象 list
      */
-    public static void startTxIdCollectors(List<NetAddress> netAddressList) {
+    public static void startBlockers(List<NetAddress> netAddressList) {
         ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
                 newCachedThreadPool();
+
         for (NetAddress tic : netAddressList) {
-            try {
-                logger.info("开始启动端口为[" + tic.getPort() + "]的 TxIdCollector");
-                es.execute(new BlockerServer(tic));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            logger.info("开始启动端口为[" + tic.getPort() + "]的 Blocker");
+            es.execute(new Blocker(tic));
         }
 
 //        logger.info("验证节点终止运行");
     }
 
     public static void main(String[] args) {
-        logger.info("启动 Blocker 服务器");
-//        new Thread(new Blocker()).start();
-        List<NetAddress> list = JsonUtil.getBlockerAddressList(Const.BlockChainNodesFile);
-        logger.info("Blocker 地址 list 为：" + list);
-        startTxIdCollectors(list);
+        List<NetAddress> blockerList = JsonUtil.getBlockerAddressList(Const.BlockChainNodesFile);
+        logger.info("Blocker 地址 list 为：" + blockerList);
+        startBlockers(blockerList);
     }
 }

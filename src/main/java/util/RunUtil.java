@@ -2,11 +2,13 @@ package util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
+import entity.NetAddress;
 import entity.Transaction;
 import org.junit.Test;
 import service.BlockMessageService;
 import service.BlockService;
 import service.TransactionService;
+import socket.Blocker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,7 @@ public class RunUtil {
     private final static ObjectMapper objMapper = new ObjectMapper();
     private BlockService blockService = BlockService.getInstance();
     private BlockMessageService blockMsgServ = BlockMessageService.getInstance();
+    private Blocker blocker = new Blocker();
 
     @Test
     public void sendGenesisBlock() {
@@ -27,7 +30,7 @@ public class RunUtil {
         txIdList.add(txId);
         Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txIdList);
         System.out.println("block: " + block);
-        blockMsgServ.sendBlock(block, NetUtil.getPrimaryNode());
+        blocker.sendBlock(block, NetUtil.getPrimaryNode());
     }
     /**
      * 统计各个集合中记录的数量
@@ -44,6 +47,7 @@ public class RunUtil {
         String blockChainCollection;
         String txCollection;
 
+        // 1. 检索 Validator 上的所有集合
         for (int port = 8000; port < 8004; port++) {
             url = realIp + ":" + port;
             ppmCollection = url + "." + Const.PPM;
@@ -78,6 +82,33 @@ public class RunUtil {
                     + ", txIdsCount: " + txIdsCount
                     + ", lastBlockId: " + lastBlockId);
         }
+
+        System.out.println("=================================================================================");
+
+        // 2. 检索 blocker 上的所有集合
+        String lbiCollection;
+        String txIdCollection;
+        String txIdMsgCollection;
+        String blockMsgCollection;
+        List<NetAddress> blockerList = JsonUtil.getBlockerAddressList(Const.BlockChainNodesFile);
+        for(NetAddress blockerAddr : blockerList) {
+            blockChainCollection = blockerAddr + "." + Const.BLOCK_CHAIN;
+            lbiCollection = blockerAddr + "." + Const.LAST_BLOCK_ID;
+            txIdCollection = blockerAddr + "." + Const.TX_ID;
+            txIdMsgCollection = blockerAddr + "." + Const.TIM;
+            blockMsgCollection = blockerAddr + "." + Const.BM;
+
+            long blockChainCount = MongoUtil.countRecords(blockChainCollection);
+            long blockMsgCount = MongoUtil.countRecords(blockMsgCollection);
+            String lastBlockId = blockService.getLastBlockId(lbiCollection);
+            long txIdsCount = MongoUtil.countRecords(txIdCollection);
+            long txIdMsgCount = MongoUtil.countRecords(txIdMsgCollection);
+            System.out.println("主机 [ " + blockerAddr + " ] <  blockChainCount: " + blockChainCount
+                    + ", blockMsgCount: " + blockMsgCount
+                    + ", txIdsCount: " + txIdsCount
+                    + ", txIdMsgCount: " + txIdMsgCount
+                    + ", lastBlockId: " + lastBlockId);
+        }
     }
 
     /**
@@ -99,7 +130,7 @@ public class RunUtil {
         RabbitmqUtil rmq = new RabbitmqUtil(Const.TX_QUEUE);
         List<Transaction> txList = new ArrayList<Transaction>();
         try {
-            for (int i = 0; i < 50; i++) {
+            for (int i = 0; i < 1000; i++) {
                 Transaction tx = TransactionService.genTx("string" + i, "测试" + i);
 //                if(i<4) {
 //                    txList.add(tx);
