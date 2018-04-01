@@ -27,6 +27,7 @@ public class CommittedMessageService {
     private final static ObjectMapper objectMapper = new ObjectMapper();
     private TransactionService txService = TransactionService.getInstance();
     private BlockService blockService = BlockService.getInstance();
+    private BlockMessageService blockMsgServ = BlockMessageService.getInstance();
     private LastBlockIdMessageService lbmService = LastBlockIdMessageService.getInstance();
     private TxIdMessageService timSrv = TxIdMessageService.getInstance();
     private NetService netService = NetService.getInstance();
@@ -73,7 +74,8 @@ public class CommittedMessageService {
                         logger.info("Last block Id: " + blockId + " 更新成功");
 
                         // 验证成功的 block 发送到 Blocker 服务器上
-                        netService.sendMsg(blockMessage.toString(), blockerAddr.getIp(), blockerAddr.getPort());
+                        netService.sendMsg(BlockMessageService.genInstance(block).toString(), blockerAddr.getIp(),
+                                blockerAddr.getPort());
 //                            new NettyClient(publisherAddr.getIp(), publisherAddr.getPort()).start(lbMsg.toString());
                     } else {
                         logger.error("Last block Id: " + blockId + " 更新失败");

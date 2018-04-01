@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import entity.Block;
 import entity.Transaction;
 import org.junit.Test;
+import service.BlockMessageService;
 import service.BlockService;
 import service.TransactionService;
 
@@ -17,7 +18,17 @@ import java.util.List;
 public class RunUtil {
     private final static ObjectMapper objMapper = new ObjectMapper();
     private BlockService blockService = BlockService.getInstance();
+    private BlockMessageService blockMsgServ = BlockMessageService.getInstance();
 
+    @Test
+    public void sendGenesisBlock() {
+        String txId = "-1";
+        List<String> txIdList = new ArrayList<String>();
+        txIdList.add(txId);
+        Block block = blockService.genBlock(Const.GENESIS_BLOCK_ID, txIdList);
+        System.out.println("block: " + block);
+        blockMsgServ.sendBlock(block, NetUtil.getPrimaryNode());
+    }
     /**
      * 统计各个集合中记录的数量
      */

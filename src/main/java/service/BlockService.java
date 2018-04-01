@@ -105,6 +105,22 @@ public class BlockService {
     }
 
     /**
+     * 从 txIdCollection 中找到还未添加到 block 中的区块
+     * @param preBlockId
+     * @param txIdCollection
+     * @param limitSize
+     * @return
+     */
+    public Block genBlock(String preBlockId, String txIdCollection, double limitSize){
+        List<String> txIdList = MongoUtil.find(txIdCollection, limitSize);
+        if (txIdList.size() > 0) {
+            return this.genBlock(preBlockId, txIdList);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * 将区块 block 保存到集合 blockChainCollection 中
      *
      * @param block

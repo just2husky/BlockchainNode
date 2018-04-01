@@ -27,6 +27,7 @@ public class Const {
     public final static String HASH_ALG = "SHA-256";
     public final static String BLOCK_CHAIN = "BlockChain";
     public final static String TX = "Transaction";
+    public final static String TX_ID = "TransactionId";
 
     public final static String PRE_BLOCK_ID = "PreBlockId";
     public final static String PRE_BLOCK_ID_COLLECTION = "PreBlockIdCollection";
@@ -40,4 +41,7 @@ public class Const {
     public final static String ASC = "ascending";
 
     public final static String GENESIS_BLOCK_ID = "0";
+
+    public final static double TX_ID_LIST_SIZE = 20 / 1024.0; // 单位 MB
+    public final static int TIME_OUT = 10000;
 }

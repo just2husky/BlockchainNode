@@ -236,6 +236,12 @@ public class MongoUtil {
         return list;
     }
 
+    /**
+     * 在 tx id collection 中寻找尚未加入大区块中的 TxId，最大限制为 limitSize
+     * @param collectionName
+     * @param limitSize
+     * @return
+     */
     public static List<String> find(String collectionName, double limitSize) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
         FindIterable<Document> findIterable = collection.find(eq("inBlock", false))

@@ -10,8 +10,10 @@ import util.NetUtil;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by chao on 2017/12/25.
@@ -35,7 +37,7 @@ public class BlockerServer implements Runnable {
         try {
             logger.info("启动 BlockerServer 服务器 " + url);
             while (true) {
-                threadPool.execute(new BlockerServerHandler(serverSocket.accept()));
+                threadPool.execute(new BlockerServerHandler(serverSocket.accept(), netAddr));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -43,12 +45,28 @@ public class BlockerServer implements Runnable {
 
     }
 
-    public static void main(String[] args) {
-        NetAddress na = JsonUtil.getTxIdCollectorAddress(Const.BlockChainNodesFile);
-        try {
-            new Thread(new BlockerServer(na)).start();
-        } catch (IOException e) {
-            e.printStackTrace();
+    /**
+     * 根据 netAddressList 启动对应端口的 TxIdCollector
+     * @param netAddressList TxIdCollectorAddress 对象 list
+     */
+    public static void startBlockers(List<NetAddress> netAddressList) {
+        ThreadPoolExecutor es = (ThreadPoolExecutor) Executors.
+                newCachedThreadPool();
+        for (NetAddress tic : netAddressList) {
+            try {
+                logger.info("开始启动端口为[" + tic.getPort() + "]的 Blocker");
+                es.execute(new BlockerServer(tic));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+//        logger.info("验证节点终止运行");
+    }
+
+    public static void main(String[] args) {
+        List<NetAddress> blockerList = JsonUtil.getBlockerAddressList(Const.BlockChainNodesFile);
+        logger.info("Blocker 地址 list 为：" + blockerList);
+        startBlockers(blockerList);
     }
 }

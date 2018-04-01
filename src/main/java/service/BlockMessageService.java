@@ -25,6 +25,7 @@ public class BlockMessageService {
     private TxIdService tis = TxIdService.getInstance();
     private BlockService blockService = BlockService.getInstance();
     private BlockerService blockerService = BlockerService.getInstance();
+    private NetService netService = NetService.getInstance();
 
     private static class LazyHolder {
         private static final BlockMessageService INSTANCE = new BlockMessageService();
@@ -68,15 +69,13 @@ public class BlockMessageService {
     /**
      * 处理从 Validator 发往 Blocker 的 BlockMessage
      * @param blockMsg
-     * @param netAddr
-     * @throws Exception
+     * @param blockMsgCollection
+     * @param txIdCollection
+     * @param blockChainCollection
+     * @param lbiCollection
      */
-    public void procBlockerBlockMsg(BlockMessage blockMsg, NetAddress netAddr) throws Exception {
-        String url = netAddr.toString();
-        String blockMsgCollection = url + "." + Const.BM;
-        String txIdCollection = url + "." + Const.TIM;
-        String blockChainCollection = url + "." + Const.BLOCK_CHAIN;
-        String lbiCollection = url + "." + Const.LAST_BLOCK_ID;
+    public void procBlockerBlockMsg(BlockMessage blockMsg, NetAddress netAddr, String blockMsgCollection,
+                                    String txIdCollection, String blockChainCollection, String lbiCollection) {
 
         // 1. 将从客户端收到的 Block Message 存入到集合中
         if(BlockMessageService.save(blockMsg, blockMsgCollection)) {
@@ -105,9 +104,24 @@ public class BlockMessageService {
         long blockLength = MongoUtil.countRecords(blockChainCollection);
         if(blockerService.isCurrentBlocker(netAddr, blockLength)) {
             // 如果下一个区块由url为netAddr的block生成，则生成 block，并发送给主节点
-
+            String lastBlockId = blockService.getLastBlockId(lbiCollection);
+            Block block = blockService.genBlock(lastBlockId, txIdCollection, Const.TX_ID_LIST_SIZE);
+            if(block != null)
+                this.sendBlock(block, NetUtil.getPrimaryNode());
+            else {
+                logger.info("目前没有可以打包的TxId");
+            }
         }
 
+    }
+
+    public void sendBlock(Block block, NetAddress netAddr) {
+        logger.info("开始向 [" + netAddr.getIp() + ":" + netAddr.getPort() + "] 发送 block: " + block.getBlockId());
+        BlockMessage blockMessage = BlockMessageService.genInstance(block);
+        logger.info("blockMessage in send block: " + blockMessage);
+        String rcvMsg = netService.sendMsg(blockMessage.toString(), netAddr.getIp(),
+                netAddr.getPort(), Const.TIME_OUT);
+        logger.info("服务器响应： " + rcvMsg);
     }
 
     /**
