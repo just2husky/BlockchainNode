@@ -1,5 +1,6 @@
 package entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.msgpack.annotation.*;
@@ -10,6 +11,7 @@ import java.sql.Timestamp;
  * Created by chao on 2017/11/11.
  */
 @org.msgpack.annotation.Message
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Transaction {
     private String txId;
     private String signature;  //客户端给该交易单的签名, 为string类型

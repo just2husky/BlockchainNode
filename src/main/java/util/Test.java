@@ -27,6 +27,12 @@ public class Test {
         }
     }
 
+    /**
+     * sWSQWQWQEREQESASASASASASASSASASAFDSFSDFSDFSDFSDFSASA
+     * @param args
+     * @throws Exception
+     */
+
     public static void main(String[] args) throws Exception {
         TransactionMessageService txMsgService = TransactionMessageService.getInstance();
         BlockService blockService = BlockService.getInstance();
